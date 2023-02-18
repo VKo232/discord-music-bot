@@ -1,4 +1,9 @@
-qwertyuiop232-bot
+# qwertyuiop232-bot
+
+# Set up
+- Before updating 
+
+# publishing 
 
 ## HOW TO RUN
 1. `npm run start`
