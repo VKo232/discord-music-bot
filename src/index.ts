@@ -1,6 +1,7 @@
 import { Client, GatewayIntentBits, Collection } from 'discord.js';
 import { readdirSync } from 'fs';
 import { join } from 'path';
+import mongoose from 'mongoose';
 
 import { Config } from './config';
 
@@ -14,8 +15,12 @@ const options = { intents: [
     GatewayIntentBits.GuildMessages,
     GatewayIntentBits.MessageContent,
     GatewayIntentBits.GuildMembers,
+    GatewayIntentBits.GuildVoiceStates,
 ] };
 export const client: LoaderClient = { client: new Client(options), commands: new Collection() };
+mongoose.set('strictQuery', false);
+
+mongoose.connect(Config.MONGODB_URI,{dbName: Config.DB_NAME});
 
 const loadCommands = (directory: string) => {
     readdirSync(directory)

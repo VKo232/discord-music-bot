@@ -1,9 +1,10 @@
-import GuildModel from "src/models/Guild";
+import GuildModel from "../../models/Guild";
 import { TextChannel } from 'discord.js';
 
 import { joinVoiceChannel,getVoiceConnection } from "@discordjs/voice";
 import { InternalDiscordGatewayAdapterCreator } from "discord.js";
 import {client} from '../../index';
+import { connect } from "mongoose";
 
 export const joinChannel = async (
   voiceChannelID: string,
@@ -35,14 +36,11 @@ export const leaveChannel = async (guildID: string) => {
     { voiceChannelId: undefined },
     { new: true }
   );
-  
-  if (!guild?.voiceChannelId) {
-      return;
-  }
   const connection = getVoiceConnection(guildID);
   if(!connection) {
+    console.error("could not find connection for guild ", guildID);
     return;
   }
   await connection.destroy(); // disconnect
-  console.log(`Left ${guild.voiceChannelId} in ${guild.guildId}`);
+  console.log(`Left ${guild?.voiceChannelId} in ${guild?.guildId}`);
 };

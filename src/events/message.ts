@@ -13,7 +13,8 @@ module.exports = {
         const directive = args.shift().toLowerCase();
         const command = commands.get(directive);
 		try {
-			command.execute(client.client, message,args);
+			if(command)
+				command.execute(client.client, message,args);
 		} catch (error) {
 			console.error(`Error executing ${command.commandName}`);
 			console.error(error);
