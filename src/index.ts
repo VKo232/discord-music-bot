@@ -9,7 +9,12 @@ interface LoaderClient {
     commands: Collection<any, any>;
 }
 
-const options = { intents: [GatewayIntentBits.Guilds,GatewayIntentBits.GuildMessages] };
+const options = { intents: [
+    GatewayIntentBits.Guilds,
+    GatewayIntentBits.GuildMessages,
+    GatewayIntentBits.MessageContent,
+    GatewayIntentBits.GuildMembers,
+] };
 export const client: LoaderClient = { client: new Client(options), commands: new Collection() };
 
 const loadCommands = (directory: string) => {
@@ -37,7 +42,7 @@ const loadEvents = (directory: string) => {
             }
         });
 };
-
+  
 loadCommands(join(__dirname, 'commands'));
 loadEvents(join(__dirname, 'events'));
 
