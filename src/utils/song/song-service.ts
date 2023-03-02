@@ -7,10 +7,9 @@ import {
 } from "@discordjs/voice";
 import play from "play-dl";
 import PlayerModel from "../../models/Player";
-import { getPlayer } from "./player";
+import { CustomPlayer } from "./player";
 import * as spotapi from "./spotify-api";
 import * as youtubeapi from "./youtube-api";
-
 
 export const addSongs = async (
   channelID: string,
@@ -22,40 +21,18 @@ export const addSongs = async (
     if (!(args.length > 0 && args[0].trim() !== "")) {
       return;
     }
-    const player = getPlayer(guildID);
+    const player = CustomPlayer.getPlayer(guildID);
     if (!player) {
       console.log("ERROR: cant get player");
       return;
     }
-
     const parsed_song: ParsedSongType | null = parseArguments(args);
     // send arguments to be handled by the song handler
-    if (parsed_song) {
-      await addToQueue(parsed_song);
-    } else {
+    if (!parsed_song) {
       return;
     }
-
-    // check if status is idle, if so play the first resource in the queue
-    console.log(player?.audioPlayer.state);
-    if (player?.audioPlayer.state) {
-    }
-
-    // var stream = await play.stream(
-    //   "https://www.youtube.com/watch?v=ybUJoVg0szU"
-    // ); // This will create stream from the above search
-
-    // let resource = createAudioResource(stream.stream, {
-    //   inputType: stream.type,
-    // });
-    // let player = createAudioPlayer({
-    //   behaviors: {
-    //     noSubscriber: NoSubscriberBehavior.Play,
-    //   },
-    // });
-    // player.play(resource);
-    // const connection = getVoiceConnection(guildID);
-    // connection?.subscribe(player);
+    const tracks = await getTracks(parsed_song);
+    await player.add(tracks);
   } catch (err) {
     console.log("ERROR: addSongs", err);
   }
@@ -96,13 +73,14 @@ const parseArguments = (args: string[]) => {
 /*
 Adds all songs from the list into the db
 */
-const addToQueue = async (parsedSong: ParsedSongType) => {
+const getTracks = async (parsedSong: ParsedSongType) => {
   let tracks: ITrack[] = [];
   if (parsedSong.requestType === "spotify") {
     tracks = await spotapi.getSpotifyTracks(parsedSong.link);
   } else if (parsedSong.requestType === "youtube") {
     tracks = await youtubeapi.getYTTracks(parsedSong.link);
-  } else if (parsedSong.requestType === "search"){
-    tracks = await youtubeapi.searchYTTracks(parsedSong.link);
+  } else if (parsedSong.requestType === "search") {
+    tracks = await youtubeapi.getYTlink(parsedSong.link);
   }
+  return tracks;
 };

@@ -1,83 +1,178 @@
 // https://www.npmjs.com/package/ytdl-core
 
-import { google } from "googleapis";
+import { google, youtube_v3 } from "googleapis";
 import { Config } from "../../config";
 
 const youtube = google.youtube({
-    version: "v3",
-    auth: Config.GOOGLE_API_KEY,
+  version: "v3",
+  auth: Config.GOOGLE_API_KEY,
 });
-  
-export const getYTlink = async (track:ITrack) => {
-  try{
-    const query = track.name + ' ' + track.artists.join(' ');
-    const searchParams = {
-        part: ['id','snippet'],
-        type: ["video"],
-        q: query,
-        maxResults: 1,
-      };
-    // const res = await youtube.search.list(searchParams);
-    const res =await youtube.search.list(searchParams);
-    if(res?.data?.items && res?.data?.items[0]?.snippet?.title) {
-        const firstResult = res.data.items[0];
-        return {snippet:firstResult!.snippet,url:`https://www.youtube.com/watch?v=${firstResult!.id!.videoId}`};
+
+export const getYTlink = async (query: string):Promise<ITrack[]> => {
+  try {
+    if (query === ''){
+      return [];
     }
-  }catch(err) {
-    console.log("error getting yt link for ", track);
+    const searchParams = {
+      part: ["id", "snippet"],
+      type: ["video"],
+      q: query,
+      maxResults: 1,
+    };
+    // const res = await youtube.search.list(searchParams);
+    const res = await youtube.search.list(searchParams);
+    if(res?.data?.items && res?.data?.items[0]) {
+      const firstResult = res.data.items[0];
+      if(firstResult.snippet?.title && firstResult.snippet?.channelTitle){
+        return [{
+          name: firstResult!.snippet!.title,
+          artists: [firstResult!.snippet!.channelTitle],
+          source: `https://www.youtube.com/watch?v=${firstResult!.id!.videoId}`,
+        }];
+      }
+    }
+  } catch (err) {
+    console.log("error getting yt link for ", query);
   }
-    return null;
+  return [];
+};
+
+function isPlaylistLink(link: string): boolean {
+  return link.includes("playlist?list=");
 }
 
-const extractYoutubePlaylistId = (url: string) =>{
-  const match = url.match(/list=([\w-]+)/);
-  return match ? match[1] : null;
+function isVideoLink(link: string): boolean {
+  return link.includes("watch?v=");
+}
+
+function isVideoInPlaylist(link: string): boolean {
+  return link.includes("watch?v=") && link.includes("&list=");
+}
+
+function getPlaylistId(link: string): string | null {
+  if (isPlaylistLink(link)) {
+    const match = link.match(/playlist\?list=(.*)/);
+    if (match) {
+      return match[1];
+    }
+  } else if (isVideoInPlaylist(link)) {
+    const match = link.match(/&list=(.*?)(&|$)/);
+    if (match) {
+      return match[1];
+    }
+  }
+  return null;
+}
+const getVideoId= (link: string): string | null=> {
+  if (isVideoLink(link)) {
+    const match = link.match(/watch\?v=(.*?)(&|$)/);
+    if (match) {
+      return match[1];
+    }
+  } else if (isVideoInPlaylist(link)) {
+    const match = link.match(/watch\?v=(.*?)&/);
+    if (match) {
+      return match[1];
+    }
+  }
+  return null;
 }
 
 // TODO doesnt work
-const getPlaylistInfo = async (playlistUrl: string)=> {
-  const playlistId = extractYoutubePlaylistId(playlistUrl);
-  if (!playlistId) {
-    return [];
-  }
+const getVideosFromPlaylist= async (playlistId: string): Promise<ITrack[]> =>{
+  const tracks: ITrack[] = [];
 
-  const response = await youtube.playlistItems.list({
-    part: ['snippet'],
-    id:[playlistId!],
-    maxResults: 50 // Maximum number of videos to retrieve per API request
-  });
-
-  const playlist = response.data;
-
-  if (!playlist) {
-    throw new Error('Playlist not found');
-  }
-
-  const name = playlist.items[0].snippet.playlistTitle;
-  const tracks = [];
-
-  for (const item of playlist.items) {
-    const videoId = item.snippet.resourceId.videoId;
-    const videoInfo = await getVideoInfo(`https://www.youtube.com/watch?v=${videoId}`);
-    const track = {
-      name: videoInfo.title,
-      artists: [videoInfo.channel],
-      youtubeLink: videoInfo.youtubeLink
+  let nextPageToken: string | null | undefined = undefined;
+  do {
+    const playlistItemsParams: youtube_v3.Params$Resource$Playlistitems$List = {
+      part: ["snippet"],
+      playlistId: playlistId,
+      maxResults: 50,
+      pageToken: nextPageToken,
     };
-    tracks.push(track);
-  }
 
-  return {
-    name,
-    tracks
+    const playlistItemsResponse = await youtube.playlistItems.list(
+      playlistItemsParams
+    );
+    if (!playlistItemsResponse?.data?.items) {
+      nextPageToken = null;
+      continue;
+    }
+    const videoIds = playlistItemsResponse.data.items.map((item) => {
+      if (item?.snippet?.resourceId?.videoId) {
+        return item.snippet.resourceId.videoId;
+      }
+    });
+
+    const videosParams: youtube_v3.Params$Resource$Videos$List = {
+      part: ["snippet"],
+      id: [videoIds.join(",")],
+    };
+
+    try {
+      const videosResponse = await youtube.videos.list(videosParams);
+      if (videosResponse?.data?.items) {
+        videosResponse.data.items.forEach((video) => {
+          if (video?.snippet?.title && video?.snippet?.channelTitle) {
+            const track: ITrack = {
+              name: video.snippet.title,
+              artists: [video.snippet.channelTitle],
+              source: `https://www.youtube.com/watch?v=${video!.id}`,
+            };
+            tracks.push(track);
+          }
+        });
+      }
+      nextPageToken = playlistItemsResponse.data.nextPageToken;
+    } catch (err) {
+      nextPageToken = null;
+    }
+  } while (nextPageToken);
+
+  return tracks;
+}
+
+const getVideosFromVideo= async (videoId: string): Promise<ITrack[]>=> {
+  const tracks: ITrack[] = [];
+
+  const videosParams: youtube_v3.Params$Resource$Videos$List = {
+    part: ["snippet"],
+    id: [videoId],
   };
+
+  const videosResponse = await youtube.videos.list(videosParams);
+  if (videosResponse?.data?.items) {
+    videosResponse.data.items.forEach((video) => {
+      if (video?.snippet?.title && video?.snippet?.channelTitle) {
+        const track: ITrack = {
+          name: video.snippet.title,
+          artists: [video.snippet.channelTitle],
+          source: `https://www.youtube.com/watch?v=${videoId}`,
+        };
+        tracks.push(track);
+      }
+    });
+  }
+  return tracks;
 }
 
-export const getYTTracks = async (link: string):Promise<ITrack[]> => {
-  return []
-}
-export const searchYTTracks = async (link: string):Promise<ITrack[]> => {
-  return []
-}
+export const getYTTracks = async (link: string): Promise<ITrack[]> => {
+  try {
+    let tracks: ITrack[] = [];
+    if (
+      isPlaylistLink(link) ||
+      (isVideoInPlaylist(link) && getPlaylistId(link))
+    ) {
+      tracks = await getVideosFromPlaylist(getPlaylistId(link)!);
+    } else if (isVideoLink(link) && getVideoId(link)) {
+      tracks = await getVideosFromVideo(getVideoId(link)!);
+    }
+    return tracks;
+  } catch (err) {
+    console.log("error getting yttracks", link);
+  }
+  return [];
+};
+
 
 // getYTlink({title:"all for nothing",artists:['lauv'],source:"blah",ytlink:"blah"})
