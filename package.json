@@ -14,10 +14,15 @@
   "license": "ISC",
   "dependencies": {
     "@discordjs/voice": "^0.14.0",
+    "axios": "^1.3.4",
     "discord.js": "^14.7.1",
     "dotenv": "^16.0.3",
+    "ffmpeg": "^0.0.4",
+    "googleapis": "^111.0.0",
+    "libsodium-wrappers": "^0.7.11",
     "mongoose": "^6.10.0",
     "nodemon": "^2.0.20",
+    "play-dl": "^1.9.6",
     "ts-node": "^10.9.1"
   },
   "repository": "https://github.com/VKo232/its-rough.git"

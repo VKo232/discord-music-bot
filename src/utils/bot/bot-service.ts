@@ -1,10 +1,10 @@
 import GuildModel from "../../models/Guild";
-import { TextChannel } from 'discord.js';
+import { TextChannel } from "discord.js";
 
-import { joinVoiceChannel,getVoiceConnection } from "@discordjs/voice";
+import { joinVoiceChannel, getVoiceConnection } from "@discordjs/voice";
 import { InternalDiscordGatewayAdapterCreator } from "discord.js";
-import {client} from '../../index';
-import { connect } from "mongoose";
+import { client } from "../../index";
+import PlayerModel from "../../models/Player";
 
 export const joinChannel = async (
   voiceChannelID: string,
@@ -12,22 +12,31 @@ export const joinChannel = async (
   voiceAdapterCreator: InternalDiscordGatewayAdapterCreator,
   textChannelID: string
 ) => {
-  const guild = await GuildModel.findOneAndUpdate(
-    { guildId: guildID },
-    { voiceChannelId: voiceChannelID, textChannelId: textChannelID },
-    { new: true, upsert: true }
-  );
-  if (!guild.voiceChannelId && client?.client?.channels?.cache?.get(textChannelID) ) {
-    (client.client.channels.cache.get(textChannelID) as TextChannel).send("no channel or guildID");
-    console.log("no channel or guildID");
-    return;
-  }
+  // check if connection exists before joining call
+  const connection = getVoiceConnection(guildID);
+  if(!connection){
+    const guild = await GuildModel.findOneAndUpdate(
+      { guildId: guildID },
+      { voiceChannelId: voiceChannelID, textChannelId: textChannelID },
+      { new: true, upsert: true }
+    );
+    if (
+      !guild.voiceChannelId &&
+      client?.client?.channels?.cache?.get(textChannelID)
+    ) {
+      (client.client.channels.cache.get(textChannelID) as TextChannel).send(
+        "no channel or server??"
+      );
+      console.log("no channel or guildID");
+      return;
+    }
 
-  const connection = joinVoiceChannel({
-    channelId: voiceChannelID,
-    guildId: guildID,
-    adapterCreator: voiceAdapterCreator,
-  });
+    joinVoiceChannel({
+      channelId: voiceChannelID,
+      guildId: guildID,
+      adapterCreator: voiceAdapterCreator,
+    });
+  }
 };
 
 export const leaveChannel = async (guildID: string) => {
@@ -37,10 +46,12 @@ export const leaveChannel = async (guildID: string) => {
     { new: true }
   );
   const connection = getVoiceConnection(guildID);
-  if(!connection) {
-    console.error("could not find connection for guild ", guildID);
-    return;
+
+  if (connection) {
+    await connection.destroy(); // disconnect
   }
-  await connection.destroy(); // disconnect
+  // clean up 
+  await PlayerModel.deleteOne({guildId: guildID});
+
   console.log(`Left ${guild?.voiceChannelId} in ${guild?.guildId}`);
 };

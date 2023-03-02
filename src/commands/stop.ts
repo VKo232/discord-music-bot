@@ -17,6 +17,7 @@ module.exports = {
     // call request bot to leave channel
     await leaveChannel(message.guild.id);
     // clean up remove the queue
+    // TODO IT SHOULD  NOT REPLY 
     await message.reply("left channel");
   },
 };

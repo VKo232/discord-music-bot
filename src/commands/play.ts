@@ -1,5 +1,7 @@
 import { Client, Message, SlashCommandBuilder } from "discord.js";
-import { joinChannel } from  "../utils/bot/bot-service";
+import { addSongs } from "../utils/song/song-service";
+import { joinChannel } from "../utils/bot/bot-service";
+
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -7,9 +9,9 @@ module.exports = {
     .setDescription("Plays a song!"),
   async execute(client: Client, message: Message, args: any) {
     if (
-      !message.member?.voice?.channelId ||
-      !message.guild?.id ||
-      !message.guild?.voiceAdapterCreator
+      !message.member?.voice?.channelId || // this one is when not in voice call
+      !message.guild?.id || // something broke
+      !message.guild?.voiceAdapterCreator // something broke
     ) {
       await message.reply("Join a voice call first");
       return;
@@ -22,6 +24,6 @@ module.exports = {
       message.channelId
     );
     // call add to queue
-    await message.reply("Added");
+    await addSongs(message.member.voice.channelId, message.guild.id,args);
   },
 };
