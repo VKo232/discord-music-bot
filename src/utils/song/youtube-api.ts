@@ -3,12 +3,14 @@
 import { google, youtube_v3 } from "googleapis";
 import { Config } from "../../config";
 
+const youPattern =
+/^https?:\/\/(www\.)?youtube\.com\/(watch\?v=[a-zA-Z0-9_-]+|playlist\?list=[a-zA-Z0-9_-]+)(\&.*)?$/;
+
 const youtube = google.youtube({
   version: "v3",
   auth: Config.GOOGLE_API_KEY,
 });
-
-export const getYTlink = async (query: string):Promise<ITrack[]> => {
+export const searchYTlink = async (query: string):Promise<ITrack[]> => {
   try {
     if (query === ''){
       return [];
@@ -35,6 +37,23 @@ export const getYTlink = async (query: string):Promise<ITrack[]> => {
     console.log("error getting yt link for ", query);
   }
   return [];
+};
+
+export const getYTlink = async (track: ITrack):Promise<string> => {
+  try {
+    // check if type of link is youtube then do nothing 
+    if(youPattern.test(track.source)) {
+      return track.source;
+    } 
+    const query = track.name + ' ' + track.artists.join(' ');
+    const qdata = await searchYTlink(query);
+    if(qdata?.length){
+      return qdata[0].source;
+    }
+    
+  }catch(err) {
+  }
+  return "";
 };
 
 function isPlaylistLink(link: string): boolean {

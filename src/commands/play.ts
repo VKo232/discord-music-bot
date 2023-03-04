@@ -2,7 +2,6 @@ import { Client, Message, SlashCommandBuilder } from "discord.js";
 import { addSongs } from "../utils/song/song-service";
 import { joinChannel } from "../utils/bot/bot-service";
 
-
 module.exports = {
   data: new SlashCommandBuilder()
     .setName("play")
@@ -24,6 +23,6 @@ module.exports = {
       message.channelId
     );
     // call add to queue
-    await addSongs(message.member.voice.channelId, message.guild.id,args);
+    await addSongs({ guildID: message.guild.id, args: args });
   },
 };

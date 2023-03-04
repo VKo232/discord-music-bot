@@ -1,21 +1,14 @@
-import {
-  AudioPlayer,
-  createAudioPlayer,
-  createAudioResource,
-  getVoiceConnection,
-  NoSubscriberBehavior,
-} from "@discordjs/voice";
-import play from "play-dl";
-import PlayerModel from "../../models/Player";
 import { CustomPlayer } from "./player";
 import * as spotapi from "./spotify-api";
 import * as youtubeapi from "./youtube-api";
 
-export const addSongs = async (
-  channelID: string,
-  guildID: string,
-  args: string[]
-) => {
+export const addSongs = async ({
+  guildID,
+  args,
+}: {
+  guildID: string;
+  args: string[];
+}) => {
   try {
     // parse argument string
     if (!(args.length > 0 && args[0].trim() !== "")) {
@@ -80,7 +73,7 @@ const getTracks = async (parsedSong: ParsedSongType) => {
   } else if (parsedSong.requestType === "youtube") {
     tracks = await youtubeapi.getYTTracks(parsedSong.link);
   } else if (parsedSong.requestType === "search") {
-    tracks = await youtubeapi.getYTlink(parsedSong.link);
+    tracks = await youtubeapi.searchYTlink(parsedSong.link);
   }
   return tracks;
 };

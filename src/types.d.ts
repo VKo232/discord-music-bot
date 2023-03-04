@@ -27,3 +27,10 @@ interface ParsedSongType {
   requestType: string; // spotify, search, youtube
   link: string;
 }
+
+interface NowPlaying {
+  name: string;
+  artists: string[];
+  source:string;
+  ytlink: string;
+}

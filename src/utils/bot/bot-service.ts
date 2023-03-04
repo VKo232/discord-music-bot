@@ -1,10 +1,16 @@
 import GuildModel from "../../models/Guild";
 import { TextChannel } from "discord.js";
 
-import { joinVoiceChannel, getVoiceConnection } from "@discordjs/voice";
+import { joinVoiceChannel, getVoiceConnection, VoiceConnectionStatus } from "@discordjs/voice";
 import { InternalDiscordGatewayAdapterCreator } from "discord.js";
 import { client } from "../../index";
-import PlayerModel from "../../models/Player";
+import { CustomPlayer } from "../song/player";
+
+type sendMessageProp = {message:string, guildID: string};
+
+export const sendMessage = async ({message,guildID}:sendMessageProp) => {
+  
+}
 
 export const joinChannel = async (
   voiceChannelID: string,
@@ -31,11 +37,15 @@ export const joinChannel = async (
       return;
     }
 
-    joinVoiceChannel({
+    const connection = joinVoiceChannel({
       channelId: voiceChannelID,
       guildId: guildID,
       adapterCreator: voiceAdapterCreator,
     });
+    connection.on(VoiceConnectionStatus.Disconnected, () =>{
+      console.log("Disconnected from ",guildID);
+      CustomPlayer.destroy(guildID);
+    })
   }
 };
 
@@ -46,12 +56,10 @@ export const leaveChannel = async (guildID: string) => {
     { new: true }
   );
   const connection = getVoiceConnection(guildID);
-
+  CustomPlayer.destroy(guildID);
   if (connection) {
     await connection.destroy(); // disconnect
   }
-  // clean up 
-  await PlayerModel.deleteOne({guildId: guildID});
 
   console.log(`Left ${guild?.voiceChannelId} in ${guild?.guildId}`);
 };

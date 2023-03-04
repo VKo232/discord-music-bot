@@ -3,40 +3,106 @@ import {
   AudioPlayerStatus,
   AudioPlayer,
   getVoiceConnection,
+  createAudioResource,
 } from "@discordjs/voice";
 import play from "play-dl";
-
-
+import { sendMessage } from "../bot/bot-service";
+import { getYTlink } from "./youtube-api";
 
 export class CustomPlayer {
-  static allPlayers: Map<string, CustomPlayer> | null;
+  private static allPlayers: Map<string, CustomPlayer> | null;
 
-  audioPlayer: AudioPlayer | null = null;
-  queue: ITrack[] = [];
-  private constructor(guildID:string) {
-    if(!CustomPlayer.allPlayers!.has(guildID)) {
-      this.audioPlayer = createAudioPlayer();
+  private guildID: string;
+  private audioPlayer: AudioPlayer | null = null;
+  private queue: ITrack[] = [];
+  private currSong: NowPlaying | null = null;
+
+  private constructor(guildID: string) {
+    this.guildID = guildID;
+    if (!CustomPlayer.allPlayers!.has(guildID)) {
+      this.setupAudioPlayer();
     }
+  }
 
-  }
-  add = (tracks:ITrack[]) => {
-    this.queue.concat(tracks);
-  }
-  
   static getPlayer = (guildID: string) => {
     let currPlayer = null;
-    if(!CustomPlayer.allPlayers) {
+    if (!CustomPlayer.allPlayers) {
       CustomPlayer.allPlayers = new Map<string, CustomPlayer>();
     }
-    if(!CustomPlayer.allPlayers.has(guildID)) {
-       currPlayer = new CustomPlayer(guildID);
-       CustomPlayer.allPlayers.set(guildID,currPlayer);
+    if (!CustomPlayer.allPlayers.has(guildID)) {
+      currPlayer = new CustomPlayer(guildID);
+      CustomPlayer.allPlayers.set(guildID, currPlayer);
     } else {
       currPlayer = CustomPlayer.allPlayers.get(guildID);
     }
     return currPlayer;
+  };
+
+  add = async (tracks: ITrack[]) => {
+    await this.setupAudioPlayer();
+    this.queue.concat(tracks);
+    if (!this.currSong) await this.playNext();
+  };
+
+  private async setupAudioPlayer() {
+    if (this.audioPlayer) {
+      return;
+    }
+    this.audioPlayer = createAudioPlayer();
+    const connection = getVoiceConnection(this.guildID);
+    if (!connection || !this.audioPlayer) {
+      return;
+    }
+    connection.subscribe(this.audioPlayer);
+
+    this.audioPlayer.on("error", async (error) => {
+      console.error(`Error: with resource `);
+      await this.playNext();
+    });
+    this.audioPlayer.on(AudioPlayerStatus.Idle, async () => {
+      this.currSong = null;
+      await this.playNext();
+    });
   }
 
+  private async playNext() {
+    if (!this.queue.length) {
+      return;
+    }
+    do {
+      let newSong = this.queue.shift();
+      if (!newSong) {
+        return;
+      }
+      let ytlink = await getYTlink(newSong);
+      if (ytlink) {
+        this.currSong = { ...newSong, ytlink };
+        var stream = await play.stream(ytlink);
+        let resource = createAudioResource(stream.stream, {
+          inputType: stream.type,
+        });
+        await this.setupAudioPlayer();
+        if(this.audioPlayer){
+          this.audioPlayer.play(resource);
+        }
+
+      } else {
+        console.log("error getting song", newSong);
+        sendMessage({
+          message: "can't play " + newSong.name,
+          guildID: this.guildID,
+        });
+      }
+    } while (this.currSong == null && this.queue.length);
+  }
+
+  static destroy(guildID: string) {
+    const thisPlayer = CustomPlayer.allPlayers?.get(guildID);
+    if (thisPlayer) {
+      thisPlayer.audioPlayer?.stop();
+    }
+    CustomPlayer.allPlayers?.delete(guildID);
+  }
 }
 
 // export const getPlayer = (guildID: string) => {
