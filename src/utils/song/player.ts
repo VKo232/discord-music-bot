@@ -4,6 +4,7 @@ import {
   AudioPlayer,
   getVoiceConnection,
   createAudioResource,
+  NoSubscriberBehavior,
 } from "@discordjs/voice";
 import play from "play-dl";
 import { sendMessage } from "../bot/bot-service";
@@ -18,6 +19,7 @@ export class CustomPlayer {
   private currSong: NowPlaying | null = null;
 
   private constructor(guildID: string) {
+    console.log("creating player");
     this.guildID = guildID;
     if (!CustomPlayer.allPlayers!.has(guildID)) {
       this.setupAudioPlayer();
@@ -39,33 +41,57 @@ export class CustomPlayer {
   };
 
   add = async (tracks: ITrack[]) => {
+    console.log("adding tracks", tracks.length);
     await this.setupAudioPlayer();
-    this.queue.concat(tracks);
-    if (!this.currSong) await this.playNext();
+    this.queue = this.queue.concat(tracks);
+    console.log("added tracks", tracks.length);
+    if (!this.currSong) {
+      console.log("keeping it up, add more songs");
+      await this.playNext();
+    }
   };
 
   private async setupAudioPlayer() {
+    console.log("setting up audio player");
     if (this.audioPlayer) {
+      const connection = getVoiceConnection(this.guildID);
+      connection?.subscribe(this.audioPlayer);
       return;
     }
-    this.audioPlayer = createAudioPlayer();
+    this.audioPlayer = createAudioPlayer({
+      behaviors: {
+        noSubscriber: NoSubscriberBehavior.Play,
+      },
+    });
     const connection = getVoiceConnection(this.guildID);
     if (!connection || !this.audioPlayer) {
+      console.log("no connection or audio player D:");
       return;
     }
     connection.subscribe(this.audioPlayer);
-
     this.audioPlayer.on("error", async (error) => {
       console.error(`Error: with resource `);
       await this.playNext();
     });
     this.audioPlayer.on(AudioPlayerStatus.Idle, async () => {
+      console.log("audio player idling");
       this.currSong = null;
       await this.playNext();
     });
+    this.audioPlayer.on(AudioPlayerStatus.Playing, () => {
+      console.log("playing");
+    });
+    this.audioPlayer.on(AudioPlayerStatus.Buffering, () => {
+      console.log("audio player buffering");
+    });
+    this.audioPlayer.on(AudioPlayerStatus.Paused, () => {
+      console.log("audio player paused");
+    });
+    console.log("done setting up");
   }
 
   private async playNext() {
+    console.log("play next pls", this.queue.length);
     if (!this.queue.length) {
       return;
     }
@@ -74,18 +100,22 @@ export class CustomPlayer {
       if (!newSong) {
         return;
       }
+      console.log("wow its ", newSong.name);
+
       let ytlink = await getYTlink(newSong);
       if (ytlink) {
+        console.log("got yt link", ytlink);
         this.currSong = { ...newSong, ytlink };
-        var stream = await play.stream(ytlink);
+        var stream = await play.stream(ytlink,{discordPlayerCompatibility: true});
         let resource = createAudioResource(stream.stream, {
           inputType: stream.type,
         });
         await this.setupAudioPlayer();
-        if(this.audioPlayer){
+        if (this.audioPlayer) {
+          console.log("playing audio resource");
           this.audioPlayer.play(resource);
         }
-
+        console.log("trying best to play");
       } else {
         console.log("error getting song", newSong);
         sendMessage({
@@ -96,6 +126,13 @@ export class CustomPlayer {
     } while (this.currSong == null && this.queue.length);
   }
 
+  async skip() {
+    console.log("skipping song");
+    this.audioPlayer?.stop();
+    // this.audioPlayer = null;
+    this.playNext();
+  }
+
   static destroy(guildID: string) {
     const thisPlayer = CustomPlayer.allPlayers?.get(guildID);
     if (thisPlayer) {
@@ -104,51 +141,3 @@ export class CustomPlayer {
     CustomPlayer.allPlayers?.delete(guildID);
   }
 }
-
-// export const getPlayer = (guildID: string) => {
-//   let player = allPlayers.get(guildID);
-//   if (!player) {
-//     player = { audioPlayer: createAudioPlayer(), queue: [] };
-//     const connection = getVoiceConnection(guildID);
-//     if (!connection) {
-//       return null;
-//     }
-//     connection.subscribe(player.audioPlayer);
-//   }
-
-//   player.audioPlayer.on(AudioPlayerStatus.Playing, () => {});
-//   player.audioPlayer.on("error", (error) => {
-//     console.error(`Error: with resource `);
-//     // play next one
-//   });
-//   player.audioPlayer.on(AudioPlayerStatus.Idle, async () => {
-//     // play next one
-//     // make sure this only happens once
-//     // get queue from db
-//   });
-//     // check if status is idle, if so play the first resource in the queue
-//     console.log(player?.audioPlayer.state);
-//     if (player?.audioPlayer.state) {
-//     }
-//   player.add = () => {
-
-//   }
-//   return player;
-
-//       // var stream = await play.stream(
-//     //   "https://www.youtube.com/watch?v=ybUJoVg0szU"
-//     // ); // This will create stream from the above search
-
-//     // let resource = createAudioResource(stream.stream, {
-//     //   inputType: stream.type,
-//     // });
-//     // let player = createAudioPlayer({
-//     //   behaviors: {
-//     //     noSubscriber: NoSubscriberBehavior.Play,
-//     //   },
-//     // });
-//     // player.play(resource);
-//     // const connection = getVoiceConnection(guildID);
-//     // connection?.subscribe(player);
-
-// };

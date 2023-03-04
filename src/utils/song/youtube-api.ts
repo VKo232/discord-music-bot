@@ -41,6 +41,7 @@ export const searchYTlink = async (query: string):Promise<ITrack[]> => {
 
 export const getYTlink = async (track: ITrack):Promise<string> => {
   try {
+    console.log("getting yt link praying",track.name);
     // check if type of link is youtube then do nothing 
     if(youPattern.test(track.source)) {
       return track.source;
@@ -52,6 +53,7 @@ export const getYTlink = async (track: ITrack):Promise<string> => {
     }
     
   }catch(err) {
+    console.log("error getting ytlink", err);
   }
   return "";
 };
@@ -144,6 +146,7 @@ const getVideosFromPlaylist= async (playlistId: string): Promise<ITrack[]> =>{
       }
       nextPageToken = playlistItemsResponse.data.nextPageToken;
     } catch (err) {
+      console.log("error getting videos from youtube playlist", err);
       nextPageToken = null;
     }
   } while (nextPageToken);
@@ -182,8 +185,10 @@ export const getYTTracks = async (link: string): Promise<ITrack[]> => {
       isPlaylistLink(link) ||
       (isVideoInPlaylist(link) && getPlaylistId(link))
     ) {
+      console.log("playlist wooo")
       tracks = await getVideosFromPlaylist(getPlaylistId(link)!);
     } else if (isVideoLink(link) && getVideoId(link)) {
+      console.log("a single pringle")
       tracks = await getVideosFromVideo(getVideoId(link)!);
     }
     return tracks;
@@ -192,6 +197,3 @@ export const getYTTracks = async (link: string): Promise<ITrack[]> => {
   }
   return [];
 };
-
-
-// getYTlink({title:"all for nothing",artists:['lauv'],source:"blah",ytlink:"blah"})

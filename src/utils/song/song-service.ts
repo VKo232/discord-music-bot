@@ -1,3 +1,5 @@
+import { AudioPlayerStatus, createAudioPlayer, createAudioResource, getVoiceConnection, NoSubscriberBehavior, StreamType } from "@discordjs/voice";
+import { stream } from "play-dl";
 import { CustomPlayer } from "./player";
 import * as spotapi from "./spotify-api";
 import * as youtubeapi from "./youtube-api";
@@ -69,11 +71,17 @@ Adds all songs from the list into the db
 const getTracks = async (parsedSong: ParsedSongType) => {
   let tracks: ITrack[] = [];
   if (parsedSong.requestType === "spotify") {
+    console.log("getting spotify track")
     tracks = await spotapi.getSpotifyTracks(parsedSong.link);
+    console.log("got spotify tracks", tracks.length)
   } else if (parsedSong.requestType === "youtube") {
+    console.log("getting youtube tracks")
     tracks = await youtubeapi.getYTTracks(parsedSong.link);
+    console.log("got spotify tracks", tracks.length)
   } else if (parsedSong.requestType === "search") {
+    console.log("searching for yt track");
     tracks = await youtubeapi.searchYTlink(parsedSong.link);
+    console.log("got yt track");
   }
   return tracks;
 };

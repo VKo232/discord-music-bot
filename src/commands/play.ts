@@ -7,6 +7,7 @@ module.exports = {
     .setName("play")
     .setDescription("Plays a song!"),
   async execute(client: Client, message: Message, args: any) {
+    console.log("executing play");
     if (
       !message.member?.voice?.channelId || // this one is when not in voice call
       !message.guild?.id || // something broke
@@ -22,7 +23,9 @@ module.exports = {
       message.guild?.voiceAdapterCreator,
       message.channelId
     );
+    console.log("joined channel");
     // call add to queue
     await addSongs({ guildID: message.guild.id, args: args });
+    console.log("added songs");
   },
 };

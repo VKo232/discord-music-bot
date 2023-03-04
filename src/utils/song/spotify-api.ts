@@ -84,7 +84,7 @@ const getTrackInfo = async (trackId: string) => {
 
       return [res];
     } catch (err) {
-      // console.log("get track info err", err);
+      console.log("get track info err", err);
     }
   }
   return [];
