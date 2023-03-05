@@ -109,7 +109,9 @@ export class CustomPlayer {
         var stream = await play.stream(ytlink,{discordPlayerCompatibility: true});
         let resource = createAudioResource(stream.stream, {
           inputType: stream.type,
+          inlineVolume: true 
         });
+        resource.volume?.setVolume(0.5);
         await this.setupAudioPlayer();
         if (this.audioPlayer) {
           console.log("playing audio resource");

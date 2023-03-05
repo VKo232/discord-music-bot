@@ -67,7 +67,7 @@ function isVideoLink(link: string): boolean {
 }
 
 function isVideoInPlaylist(link: string): boolean {
-  return link.includes("watch?v=") && link.includes("&list=");
+  return link.includes("watch?v=") && link.includes("list=");
 }
 
 function getPlaylistId(link: string): string | null {
@@ -77,7 +77,7 @@ function getPlaylistId(link: string): string | null {
       return match[1];
     }
   } else if (isVideoInPlaylist(link)) {
-    const match = link.match(/&list=(.*?)(&|$)/);
+    const match = link.match(/list=(.*?)(&|$)/);
     if (match) {
       return match[1];
     }
@@ -101,56 +101,66 @@ const getVideoId= (link: string): string | null=> {
 
 // TODO doesnt work
 const getVideosFromPlaylist= async (playlistId: string): Promise<ITrack[]> =>{
-  const tracks: ITrack[] = [];
+  let tracks: ITrack[] = [];
 
   let nextPageToken: string | null | undefined = undefined;
+  try {
   do {
-    const playlistItemsParams: youtube_v3.Params$Resource$Playlistitems$List = {
+
+    const {data}:any = await youtube.playlistItems.list({
       part: ["snippet"],
       playlistId: playlistId,
       maxResults: 50,
       pageToken: nextPageToken,
-    };
+    });
 
-    const playlistItemsResponse = await youtube.playlistItems.list(
-      playlistItemsParams
-    );
-    if (!playlistItemsResponse?.data?.items) {
+    if (data?.items) {
       nextPageToken = null;
       continue;
     }
-    const videoIds = playlistItemsResponse.data.items.map((item) => {
-      if (item?.snippet?.resourceId?.videoId) {
-        return item.snippet.resourceId.videoId;
-      }
+
+    const newTracks: ITrack[] | undefined = data?.items?.map((item:any) => {
+      const { title, channelTitle } = item?.snippet || {} ;
+      return {
+        name: title,
+        artists: [channelTitle],
+        source: `https://www.youtube.com/watch?v=${item.id}`,
+      };
     });
-
-    const videosParams: youtube_v3.Params$Resource$Videos$List = {
-      part: ["snippet"],
-      id: [videoIds.join(",")],
-    };
-
-    try {
-      const videosResponse = await youtube.videos.list(videosParams);
-      if (videosResponse?.data?.items) {
-        videosResponse.data.items.forEach((video) => {
-          if (video?.snippet?.title && video?.snippet?.channelTitle) {
-            const track: ITrack = {
-              name: video.snippet.title,
-              artists: [video.snippet.channelTitle],
-              source: `https://www.youtube.com/watch?v=${video!.id}`,
-            };
-            tracks.push(track);
-          }
-        });
-      }
-      nextPageToken = playlistItemsResponse.data.nextPageToken;
-    } catch (err) {
-      console.log("error getting videos from youtube playlist", err);
+    if(newTracks){
+    tracks = [...tracks, ...newTracks];
+    nextPageToken = data.nextPageToken;
+    } else {
       nextPageToken = null;
     }
-  } while (nextPageToken);
+    // const videosParams: youtube_v3.Params$Resource$Videos$List = {
+    //   part: ["snippet"],
+    //   id: [videoIds.join(",")],
+    // };
 
+    // try {
+    //   const videosResponse = await youtube.videos.list(videosParams);
+    //   if (videosResponse?.data?.items) {
+    //     videosResponse.data.items.forEach((video) => {
+    //       if (video?.snippet?.title && video?.snippet?.channelTitle) {
+    //         const track: ITrack = {
+    //           name: video.snippet.title,
+    //           artists: [video.snippet.channelTitle],
+    //           source: `https://www.youtube.com/watch?v=${video!.id}`,
+    //         };
+    //         tracks.push(track);
+    //       }
+    //     });
+    //   }
+    //   nextPageToken = playlistItemsResponse.data.nextPageToken;
+    // } catch (err) {
+    //   nextPageToken = null;
+    // }
+  } while (nextPageToken);
+  } catch(err) {
+    console.log("error getting videos from youtube playlist", err);
+
+  }
   return tracks;
 }
 

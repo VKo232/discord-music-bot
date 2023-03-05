@@ -33,3 +33,6 @@
     - `git push -f`
     - `git checkout main` to go back to the main branch
 5. Then go on github and make a pull request
+
+## connecting to a server
+opc@132.145.99.247
