@@ -75,8 +75,13 @@ export class CustomPlayer {
     });
     this.audioPlayer.on(AudioPlayerStatus.Idle, async () => {
       console.log("audio player idling");
-      this.currSong = null;
-      await this.playNext();
+      setTimeout(async () => {
+        if (this.audioPlayer?.state.status === AudioPlayerStatus.Idle) {
+          this.currSong = null;
+          await this.playNext();
+            }
+      }, 500); // wait for .5s before skipping
+    
     });
     this.audioPlayer.on(AudioPlayerStatus.Playing, () => {
       console.log("playing");
@@ -132,7 +137,7 @@ export class CustomPlayer {
     console.log("skipping song");
     this.audioPlayer?.stop();
     // this.audioPlayer = null;
-    this.playNext();
+    // this.playNext();
   }
 
   static destroy(guildID: string) {

@@ -3,7 +3,6 @@ import { readdirSync } from "fs";
 import { join } from "path";
 
 import mongoose from "mongoose";
-
 import { Config } from "./config";
 
 interface LoaderClient {
@@ -29,7 +28,7 @@ export const client: LoaderClient = {
 };
 
 mongoose.set("strictQuery", false);
-mongoose.connect(Config.MONGODB_URI, { dbName: Config.DB_NAME });
+mongoose.connect(Config.MONGODB_URI!, { dbName: Config.DB_NAME });
 
 
 const loadCommands = (directory: string) => {
