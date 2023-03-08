@@ -58,8 +58,9 @@ const loadEvents = (directory: string) => {
       }
     });
 };
-
+console.log("load Commands");
 loadCommands(join(__dirname, "commands"));
+console.log("load events");
 loadEvents(join(__dirname, "events"));
-
-client.client.login(Config.token);
+console.log("login");
+client.client.login(Config.token).then(()=>{console.log("logged in returned")}).catch(err=>{console.log(err)});
