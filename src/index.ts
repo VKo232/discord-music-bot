@@ -38,11 +38,18 @@ const loadCommands = (directory: string) => {
       const command = require(join(directory, file));
       if ("data" in command && "execute" in command) {
         client.commands.set(command.data.name, command);
+        if('aliases' in command) {
+          command.aliases.forEach((alias:string) => {
+            client.commands.set(alias, command)
+        })
+    
+        }
       } else {
         console.log(
           `[WARNING] The command at ${file} is missing a required "data" or "execute" property.`
         );
       }
+      
     });
 };
 

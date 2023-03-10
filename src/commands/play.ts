@@ -6,6 +6,7 @@ module.exports = {
   data: new SlashCommandBuilder()
     .setName("play")
     .setDescription("Plays a song!"),
+    aliases:['p'],
   async execute(client: Client, message: Message, args: any) {
     console.log("executing play");
     if (

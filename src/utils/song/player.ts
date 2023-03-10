@@ -17,7 +17,7 @@ export class CustomPlayer {
   private audioPlayer: AudioPlayer | null = null;
   private queue: ITrack[] = [];
   private currSong: NowPlaying | null = null;
-  private volume: number = 0.2; 
+  private volume: number = 0.25; 
 
   private constructor(guildID: string) {
     console.log("creating player");

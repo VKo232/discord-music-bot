@@ -7,6 +7,7 @@ module.exports = {
   data: new SlashCommandBuilder()
     .setName("skip")
     .setDescription("skips the song!"),
+  aliases: ["s"],
   async execute(client: Client, message: Message, args: any) {
     console.log("executing skip");
     if (message.guild?.id && (await isInChannel(message.guild?.id))) {
