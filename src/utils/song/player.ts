@@ -6,7 +6,7 @@ import {
   createAudioResource,
   NoSubscriberBehavior,
 } from "@discordjs/voice";
-import play from "play-dl";
+import play, { YouTubeStream } from "play-dl";
 import { sendMessage } from "../bot/bot-service";
 import { getYTlink } from "./youtube-api";
 
@@ -17,6 +17,7 @@ export class CustomPlayer {
   private audioPlayer: AudioPlayer | null = null;
   private queue: ITrack[] = [];
   private currSong: NowPlaying | null = null;
+  private volume: number = 0.2; 
 
   private constructor(guildID: string) {
     console.log("creating player");
@@ -112,17 +113,7 @@ export class CustomPlayer {
         console.log("got yt link", ytlink);
         this.currSong = { ...newSong, ytlink };
         var stream = await play.stream(ytlink,{discordPlayerCompatibility: true});
-        let resource = createAudioResource(stream.stream, {
-          inputType: stream.type,
-          inlineVolume: true 
-        });
-        resource.volume?.setVolume(0.5);
-        await this.setupAudioPlayer();
-        if (this.audioPlayer) {
-          console.log("playing audio resource");
-          this.audioPlayer.play(resource);
-        }
-        console.log("trying best to play");
+        this.playSong(stream);
       } else {
         console.log("error getting song", newSong);
         sendMessage({
@@ -132,7 +123,21 @@ export class CustomPlayer {
       }
     } while (this.currSong == null && this.queue.length);
   }
+  private async playSong(stream: YouTubeStream) {
+    let resource = createAudioResource(stream.stream, {
+      inputType: stream.type,
+      inlineVolume: true 
+    });
+    console.log(resource.volume)
+    resource.volume?.setVolume(Math.pow(this.volume,0.5 / Math.log10(2)) );
+    await this.setupAudioPlayer();
+    if (this.audioPlayer) {
+      console.log("playing audio resource");
+      this.audioPlayer.play(resource);
+    }
+    console.log("trying best to play");
 
+  }
   async skip() {
     console.log("skipping song");
     this.audioPlayer?.stop();
