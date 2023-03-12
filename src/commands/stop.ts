@@ -6,18 +6,12 @@ module.exports = {
     .setName("stop")
     .setDescription("stops the bot!"),
   async execute(client: Client, message: Message, args: any) {
-    if (
-      !message.member?.voice?.channelId ||
-      !message.guild?.id ||
-      !message.guild?.voiceAdapterCreator
-    ) {
-      await message.reply("this server does not have the required permissions");
-      return;
-    }
+    console.log(`>>> Stop user: ${message.author.username} guild: ${message.guild?.name}`);
+
+    if (!message.guild?.id) {return; }
     // call request bot to leave channel
     await leaveChannel(message.guild.id);
-    // clean up remove the queue
-    // TODO IT SHOULD  NOT REPLY 
-    await message.reply("left channel");
+    // TODO IT SHOULD  NOT REPLY
+    await message.reply("Stopped playing");
   },
 };

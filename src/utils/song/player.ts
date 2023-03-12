@@ -5,6 +5,7 @@ import {
   getVoiceConnection,
   createAudioResource,
   NoSubscriberBehavior,
+  AudioResource,
 } from "@discordjs/voice";
 import play, { YouTubeStream } from "play-dl";
 import { sendMessage } from "../bot/bot-service";
@@ -17,7 +18,8 @@ export class CustomPlayer {
   private audioPlayer: AudioPlayer | null = null;
   private queue: ITrack[] = [];
   private currSong: NowPlaying | null = null;
-  private volume: number = 0.25; 
+  private volume: number = 0.27; 
+  private resource: AudioResource |null = null;
 
   private constructor(guildID: string) {
     console.log("creating player");
@@ -133,10 +135,15 @@ export class CustomPlayer {
     await this.setupAudioPlayer();
     if (this.audioPlayer) {
       console.log("playing audio resource");
+      this.cleanResource();
       this.audioPlayer.play(resource);
     }
     console.log("trying best to play");
 
+  }
+  private cleanResource() {
+    this.resource?.playStream.destroy();
+    this.resource?.playStream.read();
   }
   async skip() {
     console.log("skipping song");
@@ -149,6 +156,8 @@ export class CustomPlayer {
     const thisPlayer = CustomPlayer.allPlayers?.get(guildID);
     if (thisPlayer) {
       thisPlayer.audioPlayer?.stop();
+      thisPlayer.queue = [];
+      thisPlayer.cleanResource();
     }
     CustomPlayer.allPlayers?.delete(guildID);
   }

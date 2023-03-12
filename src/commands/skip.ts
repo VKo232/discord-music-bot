@@ -9,7 +9,7 @@ module.exports = {
     .setDescription("skips the song!"),
   aliases: ["s"],
   async execute(client: Client, message: Message, args: any) {
-    console.log("executing skip");
+    console.log(`>>> Skip user: ${message.author.username} guild: ${message.guild?.name}`);
     if (message.guild?.id && (await isInChannel(message.guild?.id))) {
       CustomPlayer.getPlayer(message.guild?.id)?.skip();
     }

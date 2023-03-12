@@ -8,7 +8,7 @@ module.exports = {
     .setDescription("Plays a song!"),
     aliases:['p'],
   async execute(client: Client, message: Message, args: any) {
-    console.log("executing play");
+    console.log(`>>> Play user: ${message.author.username} in guild: ${message.guild?.name} song request: ${args.join(' ')}`);
     if (
       !message.member?.voice?.channelId || // this one is when not in voice call
       !message.guild?.id || // something broke
