@@ -6,9 +6,13 @@ module.exports = {
   data: new SlashCommandBuilder()
     .setName("play")
     .setDescription("Plays a song!"),
-    aliases:['p'],
+  aliases: ["p"],
   async execute(client: Client, message: Message, args: any) {
-    console.log(`>>> Play user: ${message.author.username} in guild: ${message.guild?.name} song request: ${args.join(' ')}`);
+    console.log(
+      `>>> Play user: ${message.author.username} in guild: ${
+        message.guild?.name
+      } song request: ${args.join(" ")}`
+    );
     if (
       !message.member?.voice?.channelId || // this one is when not in voice call
       !message.guild?.id || // something broke

@@ -24,8 +24,8 @@ export const playerClearQueue = (guildID: string) => {
 };
 
 export const playerSkip = (guildID: string) => {
-    allPlayers.get(guildID)?.skip();
-}
+  allPlayers.get(guildID)?.skip();
+};
 
 export const playerDestroy = (guildID: string) => {
   const thisPlayer = allPlayers.get(guildID);

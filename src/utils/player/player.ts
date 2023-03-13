@@ -12,15 +12,14 @@ import { sendMessage } from "../bot/bot-service";
 import { getYTlink } from "../song/youtube-api";
 
 export class CustomPlayer {
-
   private guildID: string;
   private audioPlayer: AudioPlayer | null = null;
   private queue: ITrack[] = [];
   private currSong: NowPlaying | null = null;
-  private volume: number = 0.27; 
-  private resource: AudioResource |null = null;
+  private volume: number = 0.27;
+  private resource: AudioResource | null = null;
 
-   constructor(guildID: string) {
+  constructor(guildID: string) {
     console.log("creating player");
     this.guildID = guildID;
     this.setupAudioPlayer();
@@ -65,9 +64,8 @@ export class CustomPlayer {
         if (this.audioPlayer?.state.status === AudioPlayerStatus.Idle) {
           this.currSong = null;
           await this.playNext();
-            }
+        }
       }, 500); // wait for .5s before skipping
-    
     });
     this.audioPlayer.on(AudioPlayerStatus.Playing, () => {
       console.log("playing");
@@ -97,7 +95,9 @@ export class CustomPlayer {
       if (ytlink) {
         console.log("got yt link", ytlink);
         this.currSong = { ...newSong, ytlink };
-        var stream = await play.stream(ytlink,{discordPlayerCompatibility: true});
+        var stream = await play.stream(ytlink, {
+          discordPlayerCompatibility: true,
+        });
         this.playSong(stream);
       } else {
         console.log("error getting song", newSong);
@@ -108,13 +108,13 @@ export class CustomPlayer {
       }
     } while (this.currSong == null && this.queue.length);
   }
-  
+
   private async playSong(stream: YouTubeStream) {
     let resource = createAudioResource(stream.stream, {
       inputType: stream.type,
-      inlineVolume: true 
+      inlineVolume: true,
     });
-    resource.volume?.setVolume(Math.pow(this.volume,0.5 / Math.log10(2)) );
+    resource.volume?.setVolume(Math.pow(this.volume, 0.5 / Math.log10(2)));
     await this.setupAudioPlayer();
     if (this.audioPlayer) {
       console.log("playing audio resource");
@@ -122,7 +122,6 @@ export class CustomPlayer {
       this.audioPlayer.play(resource);
     }
     console.log("trying best to play");
-
   }
   private cleanResource() {
     this.resource?.playStream.destroy();

@@ -7,11 +7,14 @@ module.exports = {
     .setDescription("Clears the queue!"),
   aliases: ["c"],
   async execute(client: Client, message: Message, args: any) {
-    console.log(`>>> Clear user: ${message.author.username} in guild: ${message.guild?.name}`);
-    if (!message.guild?.id) {return;}
-    if (message.guild?.id && (hasPlayer(message.guild?.id))) {
+    console.log(
+      `>>> Clear user: ${message.author.username} in guild: ${message.guild?.name}`
+    );
+    if (!message.guild?.id) {
+      return;
+    }
+    if (message.guild?.id && hasPlayer(message.guild?.id)) {
       playerClearQueue(message.guild?.id);
     }
-
   },
 };
