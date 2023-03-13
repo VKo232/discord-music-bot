@@ -9,10 +9,9 @@ import {
 } from "@discordjs/voice";
 import play, { YouTubeStream } from "play-dl";
 import { sendMessage } from "../bot/bot-service";
-import { getYTlink } from "./youtube-api";
+import { getYTlink } from "../song/youtube-api";
 
 export class CustomPlayer {
-  private static allPlayers: Map<string, CustomPlayer> | null;
 
   private guildID: string;
   private audioPlayer: AudioPlayer | null = null;
@@ -21,29 +20,13 @@ export class CustomPlayer {
   private volume: number = 0.27; 
   private resource: AudioResource |null = null;
 
-  private constructor(guildID: string) {
+   constructor(guildID: string) {
     console.log("creating player");
     this.guildID = guildID;
-    if (!CustomPlayer.allPlayers!.has(guildID)) {
-      this.setupAudioPlayer();
-    }
+    this.setupAudioPlayer();
   }
 
-  static getPlayer = (guildID: string) => {
-    let currPlayer = null;
-    if (!CustomPlayer.allPlayers) {
-      CustomPlayer.allPlayers = new Map<string, CustomPlayer>();
-    }
-    if (!CustomPlayer.allPlayers.has(guildID)) {
-      currPlayer = new CustomPlayer(guildID);
-      CustomPlayer.allPlayers.set(guildID, currPlayer);
-    } else {
-      currPlayer = CustomPlayer.allPlayers.get(guildID);
-    }
-    return currPlayer;
-  };
-
-  add = async (tracks: ITrack[]) => {
+  public add = async (tracks: ITrack[]) => {
     console.log("adding tracks", tracks.length);
     await this.setupAudioPlayer();
     this.queue = this.queue.concat(tracks);
@@ -125,12 +108,12 @@ export class CustomPlayer {
       }
     } while (this.currSong == null && this.queue.length);
   }
+  
   private async playSong(stream: YouTubeStream) {
     let resource = createAudioResource(stream.stream, {
       inputType: stream.type,
       inlineVolume: true 
     });
-    console.log(resource.volume)
     resource.volume?.setVolume(Math.pow(this.volume,0.5 / Math.log10(2)) );
     await this.setupAudioPlayer();
     if (this.audioPlayer) {
@@ -145,20 +128,16 @@ export class CustomPlayer {
     this.resource?.playStream.destroy();
     this.resource?.playStream.read();
   }
-  async skip() {
-    console.log("skipping song");
+  public async skip() {
     this.audioPlayer?.stop();
-    // this.audioPlayer = null;
-    // this.playNext();
+  }
+  public clearQueue() {
+    this.queue = [];
   }
 
-  static destroy(guildID: string) {
-    const thisPlayer = CustomPlayer.allPlayers?.get(guildID);
-    if (thisPlayer) {
-      thisPlayer.audioPlayer?.stop();
-      thisPlayer.queue = [];
-      thisPlayer.cleanResource();
-    }
-    CustomPlayer.allPlayers?.delete(guildID);
+  destroy() {
+    this.audioPlayer?.stop();
+    this.queue = [];
+    this.cleanResource();
   }
 }

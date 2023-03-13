@@ -181,8 +181,3 @@ export const getSpotifyTracks = async (link: string) => {
   }
 };
 
-// const testfunc = async (link: string) => {
-//   let a = await getSpotifyTracks(link);
-//   console.log(a.length);
-// };
-// testfunc("https://open.spotify.com/playlist/1OQyCPtrjjjDM8JB4JBRLA");

@@ -1,7 +1,5 @@
 import { Client, Message, SlashCommandBuilder } from "discord.js";
-import { addSongs } from "../utils/song/song-service";
-import { isInChannel, joinChannel } from "../utils/bot/bot-service";
-import { CustomPlayer } from "../utils/song/player";
+import { hasPlayer, playerSkip } from "../utils/player/player-service";
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -10,8 +8,8 @@ module.exports = {
   aliases: ["s"],
   async execute(client: Client, message: Message, args: any) {
     console.log(`>>> Skip user: ${message.author.username} guild: ${message.guild?.name}`);
-    if (message.guild?.id && (await isInChannel(message.guild?.id))) {
-      CustomPlayer.getPlayer(message.guild?.id)?.skip();
+    if (message.guild?.id && (hasPlayer(message.guild?.id))) {
+      playerSkip(message.guild?.id);
     }
   },
 };

@@ -1,5 +1,5 @@
 import GuildModel from "../../models/Guild";
-import { Guild, TextChannel } from "discord.js";
+import { TextChannel } from "discord.js";
 
 import {
   joinVoiceChannel,
@@ -9,7 +9,8 @@ import {
 } from "@discordjs/voice";
 import { InternalDiscordGatewayAdapterCreator } from "discord.js";
 import { client } from "../../index";
-import { CustomPlayer } from "../song/player";
+import { CustomPlayer } from "../player/player";
+import { playerDestroy } from "../player/player-service";
 
 type sendMessageProp = {
   message: string;
@@ -100,7 +101,7 @@ export const joinChannel = async (
       } catch (error) {
         // Seems to be a real disconnect which SHOULDN'T be recovered from
         connection.destroy();
-        CustomPlayer.destroy(guildID);
+        playerDestroy(guildID);
 
       }
     });
@@ -116,7 +117,7 @@ export const leaveChannel = async (guildID: string) => {
     { new: true }
   );
   const connection = getVoiceConnection(guildID);
-  CustomPlayer.destroy(guildID);
+  playerDestroy(guildID);
   if (connection) {
     await connection.destroy(); // disconnect
   }

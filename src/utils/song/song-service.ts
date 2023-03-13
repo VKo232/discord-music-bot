@@ -1,6 +1,7 @@
 import { AudioPlayerStatus, createAudioPlayer, createAudioResource, getVoiceConnection, NoSubscriberBehavior, StreamType } from "@discordjs/voice";
 import { stream } from "play-dl";
-import { CustomPlayer } from "./player";
+import { CustomPlayer } from "../player/player";
+import { getPlayer, playerAddTracks } from "../player/player-service";
 import * as spotapi from "./spotify-api";
 import * as youtubeapi from "./youtube-api";
 
@@ -16,7 +17,7 @@ export const addSongs = async ({
     if (!(args.length > 0 && args[0].trim() !== "")) {
       return;
     }
-    const player = CustomPlayer.getPlayer(guildID);
+    const player = getPlayer(guildID);
     if (!player) {
       console.log("ERROR: cant get player");
       return;
@@ -27,7 +28,7 @@ export const addSongs = async ({
       return;
     }
     const tracks = await getTracks(parsed_song);
-    await player.add(tracks);
+    await playerAddTracks(guildID,tracks);
   } catch (err) {
     console.log("ERROR: addSongs", err);
   }

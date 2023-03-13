@@ -1,0 +1,16 @@
+#!/bin/bash
+# to be used in the server
+
+# Get the image name from the first argument
+image_name=qweryuio423/music-bot
+
+# Pull the latest version of the image
+sudo docker pull $image_name
+
+# Stop all instances of the old image
+
+sudo docker stop $(sudo docker ps -a | grep $IMAGE_NAME | awk '{print $1}') || true
+sudo docker rm $(sudo docker ps -a | grep $IMAGE_NAME | awk '{print $1}')
+
+# Run the latest version of the image
+sudo docker run --env-file music.env $image_name

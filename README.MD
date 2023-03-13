@@ -35,4 +35,4 @@
 5. Then go on github and make a pull request
 
 ## connecting to a server
-opc@129.153.51.192
+opc@192.18.148.250
