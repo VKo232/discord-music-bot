@@ -1,5 +1,5 @@
-import { Config } from "../../config";
 import axios from "axios";
+import { Config } from "../../config";
 
 interface ITrack {
   name: string;
@@ -95,21 +95,22 @@ const getPlaylistInfo = async (playlistId: string) => {
   if (isvalid) {
     try {
       const tracks: ITrack[] = [];
-      const { data } = await axios.get(`https://api.spotify.com/v1/playlists/${playlistId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-        params: { fields: 'name,tracks,next' }
-      });
+      const { data } = await axios.get(
+        `https://api.spotify.com/v1/playlists/${playlistId}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+          params: { fields: "name,tracks,next" },
+        }
+      );
       tracks.push(
         ...data.tracks.items.map((item: any) => {
           const { name, id } = item.track;
-          const artists = item.track.artists.map(
-            (artist: any) => artist.name
-          );
+          const artists = item.track.artists.map((artist: any) => artist.name);
           const source = `https://open.spotify.com/track/${id}`;
           return { name, artists, source };
         })
       );
-      
+
       let nextUrl: string | null = data.tracks.next;
       while (nextUrl) {
         const { data: nextData } = await axios.get(nextUrl, {
@@ -133,7 +134,7 @@ const getPlaylistInfo = async (playlistId: string) => {
         );
       }
       return tracks;
-        } catch (err) {
+    } catch (err) {
       console.log("error in get playlist info", err);
     }
   }
@@ -180,4 +181,3 @@ export const getSpotifyTracks = async (link: string) => {
     return [];
   }
 };
-

@@ -15,7 +15,7 @@ export class CustomPlayer {
   private guildID: string;
   private audioPlayer: AudioPlayer | null = null;
   private queue: ITrack[] = [];
-  private currSong: NowPlaying | null = null;
+  private currSong: INowPlaying | null = null;
   private volume: number = 0.27;
   private resource: AudioResource | null = null;
 
@@ -133,7 +133,15 @@ export class CustomPlayer {
   public clearQueue() {
     this.queue = [];
   }
-
+  public nowPlaying() {
+    return this.currSong;
+  }
+  public pause() {
+    this.audioPlayer?.pause();
+  }
+  public unpause() {
+    this.audioPlayer?.unpause();
+  }
   destroy() {
     this.audioPlayer?.stop();
     this.queue = [];

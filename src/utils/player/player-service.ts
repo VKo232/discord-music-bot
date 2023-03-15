@@ -17,6 +17,7 @@ export const hasPlayer = (guildID: string) => {
 
 export const playerAddTracks = (guildID: string, tracks: ITrack[]) => {
   allPlayers.get(guildID)?.add(tracks);
+  allPlayers.get(guildID)?.unpause();
 };
 
 export const playerClearQueue = (guildID: string) => {
@@ -24,9 +25,22 @@ export const playerClearQueue = (guildID: string) => {
 };
 
 export const playerSkip = (guildID: string) => {
+  allPlayers.get(guildID)?.unpause();
   allPlayers.get(guildID)?.skip();
 };
 
+export const playerNowPlaying = (
+  guildID: string
+): INowPlaying | null | undefined => {
+  return allPlayers.get(guildID)?.nowPlaying();
+};
+
+export const playerPause = (guildID: string) => {
+  allPlayers.get(guildID)?.pause();
+};
+export const playerUnpause = (guildID: string) => {
+  allPlayers.get(guildID)?.unpause();
+};
 export const playerDestroy = (guildID: string) => {
   const thisPlayer = allPlayers.get(guildID);
   if (thisPlayer) {

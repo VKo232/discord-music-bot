@@ -1,4 +1,4 @@
-import { Client, GatewayIntentBits, Collection } from "discord.js";
+import { Client, Collection, GatewayIntentBits } from "discord.js";
 import { readdirSync } from "fs";
 import { join } from "path";
 
@@ -30,7 +30,6 @@ export const client: LoaderClient = {
 mongoose.set("strictQuery", false);
 mongoose.connect(Config.MONGODB_URI!, { dbName: Config.DB_NAME });
 
-
 const loadCommands = (directory: string) => {
   readdirSync(directory)
     .filter((file) => file.endsWith(".ts"))
@@ -38,18 +37,16 @@ const loadCommands = (directory: string) => {
       const command = require(join(directory, file));
       if ("data" in command && "execute" in command) {
         client.commands.set(command.data.name, command);
-        if('aliases' in command) {
-          command.aliases.forEach((alias:string) => {
-            client.commands.set(alias, command)
-        })
-    
+        if ("aliases" in command) {
+          command.aliases.forEach((alias: string) => {
+            client.commands.set(alias, command);
+          });
         }
       } else {
         console.log(
           `[WARNING] The command at ${file} is missing a required "data" or "execute" property.`
         );
       }
-      
     });
 };
 
@@ -70,4 +67,11 @@ loadCommands(join(__dirname, "commands"));
 console.log("load events");
 loadEvents(join(__dirname, "events"));
 console.log("login");
-client.client.login(Config.token).then(()=>{console.log("logged in returned")}).catch(err=>{console.log(err)});
+client.client
+  .login(Config.token)
+  .then(() => {
+    console.log("logged in returned");
+  })
+  .catch((err) => {
+    console.log(err);
+  });

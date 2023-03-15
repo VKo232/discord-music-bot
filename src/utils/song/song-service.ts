@@ -1,6 +1,3 @@
-import { AudioPlayerStatus, createAudioPlayer, createAudioResource, getVoiceConnection, NoSubscriberBehavior, StreamType } from "@discordjs/voice";
-import { stream } from "play-dl";
-import { CustomPlayer } from "../player/player";
 import { getPlayer, playerAddTracks } from "../player/player-service";
 import * as spotapi from "./spotify-api";
 import * as youtubeapi from "./youtube-api";
@@ -28,7 +25,7 @@ export const addSongs = async ({
       return;
     }
     const tracks = await getTracks(parsed_song);
-    await playerAddTracks(guildID,tracks);
+    await playerAddTracks(guildID, tracks);
   } catch (err) {
     console.log("ERROR: addSongs", err);
   }
@@ -39,7 +36,7 @@ const parseArguments = (args: string[]) => {
   const spotPattern =
     /^https?:\/\/open\.spotify\.com\/(playlist|album|track)\/([a-zA-Z0-9]+)(\?.*)?$/;
   const youPattern =
-  /(?:https?:\/\/)?(?:www\.)?(?:m\.)?(?:youtube\.com|youtu\.be)\/(watch\?v=[a-zA-Z0-9_-]+|playlist\?list=[a-zA-Z0-9_-]+)(\&.*)?$/;
+    /(?:https?:\/\/)?(?:www\.)?(?:m\.)?(?:youtube\.com|youtu\.be)\/(watch\?v=[a-zA-Z0-9_-]+|playlist\?list=[a-zA-Z0-9_-]+)(\&.*)?$/;
   let parsed = null;
   if (spotPattern.test(args[0])) {
     const match = args[0].match(spotPattern);
@@ -72,13 +69,13 @@ Adds all songs from the list into the db
 const getTracks = async (parsedSong: ParsedSongType) => {
   let tracks: ITrack[] = [];
   if (parsedSong.requestType === "spotify") {
-    console.log("getting spotify track")
+    console.log("getting spotify track");
     tracks = await spotapi.getSpotifyTracks(parsedSong.link);
-    console.log("got spotify tracks", tracks.length)
+    console.log("got spotify tracks", tracks.length);
   } else if (parsedSong.requestType === "youtube") {
-    console.log("getting youtube tracks")
+    console.log("getting youtube tracks");
     tracks = await youtubeapi.getYTTracks(parsedSong.link);
-    console.log("got spotify tracks", tracks.length)
+    console.log("got spotify tracks", tracks.length);
   } else if (parsedSong.requestType === "search") {
     console.log("searching for yt track");
     tracks = await youtubeapi.searchYTlink(parsedSong.link);

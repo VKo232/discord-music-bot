@@ -23,7 +23,7 @@ declare interface ParsedSongType  {
   link: string;
 }
 
-declare interface NowPlaying  {
+declare interface INowPlaying  {
   name: string;
   artists: string[];
   source:string;

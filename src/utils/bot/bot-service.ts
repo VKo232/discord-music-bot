@@ -1,15 +1,14 @@
-import GuildModel from "../../models/Guild";
 import { TextChannel } from "discord.js";
+import GuildModel from "../../models/Guild";
 
 import {
-  joinVoiceChannel,
-  getVoiceConnection,
-  VoiceConnectionStatus,
   entersState,
+  getVoiceConnection,
+  joinVoiceChannel,
+  VoiceConnectionStatus
 } from "@discordjs/voice";
 import { InternalDiscordGatewayAdapterCreator } from "discord.js";
 import { client } from "../../index";
-import { CustomPlayer } from "../player/player";
 import { playerDestroy } from "../player/player-service";
 
 type sendMessageProp = {
@@ -75,42 +74,46 @@ export const joinChannel = async (
       guildId: guildID,
       adapterCreator: voiceAdapterCreator,
     });
-    // patch for https://github.com/discordjs/discord.js/issues/9185 
-    connection.on('stateChange', (oldState, newState) => {
-      const oldNetworking = Reflect.get(oldState, 'networking');
-      const newNetworking = Reflect.get(newState, 'networking');
-    
-      const networkStateChangeHandler = (oldNetworkState: any, newNetworkState: any) => {
-        const newUdp = Reflect.get(newNetworkState, 'udp');
+    // patch for https://github.com/discordjs/discord.js/issues/9185
+    connection.on("stateChange", (oldState, newState) => {
+      const oldNetworking = Reflect.get(oldState, "networking");
+      const newNetworking = Reflect.get(newState, "networking");
+
+      const networkStateChangeHandler = (
+        oldNetworkState: any,
+        newNetworkState: any
+      ) => {
+        const newUdp = Reflect.get(newNetworkState, "udp");
         clearInterval(newUdp?.keepAliveInterval);
-      }
-    
-      oldNetworking?.off('stateChange', networkStateChangeHandler);
-      newNetworking?.on('stateChange', networkStateChangeHandler);
-    });
-    
-    connection.on(VoiceConnectionStatus.Disconnected, async (oldState, newState) => {
-      console.log("Disconnected from ", guildID);
+      };
 
-      try {
-        await Promise.race([
-          entersState(connection, VoiceConnectionStatus.Signalling, 5_000),
-          entersState(connection, VoiceConnectionStatus.Connecting, 5_000),
-        ]);
-        // Seems to be reconnecting to a new channel - ignore disconnect
-      } catch (error) {
-        // Seems to be a real disconnect which SHOULDN'T be recovered from
-        connection.destroy();
-        playerDestroy(guildID);
-
-      }
+      oldNetworking?.off("stateChange", networkStateChangeHandler);
+      newNetworking?.on("stateChange", networkStateChangeHandler);
     });
-    
+
+    connection.on(
+      VoiceConnectionStatus.Disconnected,
+      async (oldState, newState) => {
+        console.log("Disconnected from ", guildID);
+
+        try {
+          await Promise.race([
+            entersState(connection, VoiceConnectionStatus.Signalling, 5_000),
+            entersState(connection, VoiceConnectionStatus.Connecting, 5_000),
+          ]);
+          // Seems to be reconnecting to a new channel - ignore disconnect
+        } catch (error) {
+          // Seems to be a real disconnect which SHOULDN'T be recovered from
+          connection.destroy();
+          playerDestroy(guildID);
+        }
+      }
+    );
   }
 };
 
 export const leaveChannel = async (guildID: string) => {
-  console.log("leavign channel");
+  console.log("leaving channel");
   const guild = await GuildModel.findOneAndUpdate(
     { guildId: guildID },
     { voiceChannelId: undefined, textChannelId: undefined },

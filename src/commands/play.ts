@@ -1,6 +1,6 @@
 import { Client, Message, SlashCommandBuilder } from "discord.js";
-import { addSongs } from "../utils/song/song-service";
 import { joinChannel } from "../utils/bot/bot-service";
+import { addSongs } from "../utils/song/song-service";
 
 module.exports = {
   data: new SlashCommandBuilder()
