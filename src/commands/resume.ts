@@ -4,11 +4,11 @@ import { hasPlayer, playerUnpause } from "../utils/player/player-service";
 
 module.exports = {
   data: new SlashCommandBuilder()
-    .setName("unpause")
-    .setDescription("Unpause the song!"),
+    .setName("resume")
+    .setDescription("Resumes the song!"),
   async execute(client: Client, message: Message, args: any) {
     console.log(
-      `>>>unpause user: ${message.author.username} in guild: ${message.guild?.name}`
+      `>>>Resume user: ${message.author.username} in guild: ${message.guild?.name}`
     );
     if (!message.guild?.id) {
       return;
