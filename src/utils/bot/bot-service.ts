@@ -1,20 +1,35 @@
-import { TextChannel } from "discord.js";
+import { Message, TextChannel } from "discord.js";
 import GuildModel from "../../models/Guild";
 
 import {
   entersState,
   getVoiceConnection,
   joinVoiceChannel,
-  VoiceConnectionStatus
+  VoiceConnectionStatus,
 } from "@discordjs/voice";
 import { InternalDiscordGatewayAdapterCreator } from "discord.js";
 import { client } from "../../index";
 import { playerDestroy } from "../player/player-service";
+import { getEmoji } from "../misc/emojiMapper";
 
-type sendMessageProp = {
-  message: string;
-  guildID: string;
-  textChannel?: string;
+declare interface reactEmojiProp {
+  message: Message;
+  emoji: string; // Should be a string of the name, formatting will be done with the func
+}
+
+
+export const emojiReact = async ({ message, emoji }: reactEmojiProp) => {
+  // there should be a much more rich library for getting custom emojis and a mapper
+  // to get the fun emotes
+  // check if there is a way to get the emotes from a cache as well
+  
+  // check if default emojis
+  try {
+    let emojiString = getEmoji(emoji);
+    if(emojiString) message.react(emojiString);
+  } catch(err) {
+    console.log("emoji not found", err)
+  }
 };
 
 export const sendMessage = async ({

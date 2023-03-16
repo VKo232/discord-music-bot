@@ -1,5 +1,6 @@
 import { Client, Message, SlashCommandBuilder } from "discord.js";
-import { playerNowPlaying } from "../utils/player/player-service";
+import { emojiReact } from "../utils/bot/bot-service";
+import { hasPlayer, playerNowPlaying } from "../utils/player/player-service";
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -13,11 +14,17 @@ module.exports = {
     if (!message.guild?.id) {
       return;
     }
-    // SHOULD MOVE THIS INTO ANOTHER SERVICE
-    const currSong = playerNowPlaying(message.guild?.id);
-    if(currSong) {
-        // TODO HAVE A NOW PLAYING INTERFACE IN THE BOT-SERVICE
-        await message.reply(`Now playing ${currSong.name} by ${currSong.artists.join(', ')} `)
-    }
+    if (message.guild?.id && hasPlayer(message.guild?.id)) {
+      emojiReact({message,emoji:"ok_hand"});
+      const currSong = playerNowPlaying(message.guild?.id);
+      if(currSong) {
+          await message.reply(`Now playing ${currSong.name} by ${currSong.artists.join(', ')} `)
+      }
+    } else {
+      message.reactions.removeAll().catch();
+      emojiReact({message,emoji:"poop"});
+    } 
+
+
 },
 };

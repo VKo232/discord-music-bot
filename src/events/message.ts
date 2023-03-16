@@ -1,6 +1,7 @@
 import { Message } from "discord.js";
 import { Config } from "../config";
 import { client } from "../index";
+import { emojiReact } from "../utils/bot/bot-service";
 
 const { prefix = "!" } = Config;
 
@@ -18,6 +19,8 @@ module.exports = {
     try {
       if (command) command.execute(client.client, message, args);
     } catch (error) {
+      message.reactions.removeAll().catch();
+      emojiReact({message,emoji:"poop"})
       console.error(`Error executing ${command.commandName}`);
       console.error(error);
     }

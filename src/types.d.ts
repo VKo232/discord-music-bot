@@ -1,3 +1,4 @@
+
 declare interface Config {
   token: string;
   prefix: string;
@@ -29,3 +30,9 @@ declare interface INowPlaying  {
   source:string;
   ytlink: string;
 }
+
+declare interface sendMessageProp  {
+  message: string;
+  guildID: string;
+  textChannel?: string;
+};

@@ -1,5 +1,5 @@
 import { Client, Message, SlashCommandBuilder } from "discord.js";
-import { joinChannel } from "../utils/bot/bot-service";
+import { emojiReact, joinChannel } from "../utils/bot/bot-service";
 import { addSongs } from "../utils/song/song-service";
 
 module.exports = {
@@ -18,9 +18,12 @@ module.exports = {
       !message.guild?.id || // something broke
       !message.guild?.voiceAdapterCreator // something broke
     ) {
+      emojiReact({message,emoji:"thumbsdown"})
       await message.reply("Join a voice call first");
       return;
     }
+    emojiReact({ message, emoji: "ok_hand" });
+
     // call request bot join to the channel if not in use
     await joinChannel(
       message.member.voice.channelId,

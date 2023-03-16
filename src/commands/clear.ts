@@ -1,4 +1,5 @@
 import { Client, Message, SlashCommandBuilder } from "discord.js";
+import { emojiReact } from "../utils/bot/bot-service";
 import { hasPlayer, playerClearQueue } from "../utils/player/player-service";
 
 module.exports = {
@@ -14,7 +15,11 @@ module.exports = {
       return;
     }
     if (message.guild?.id && hasPlayer(message.guild?.id)) {
+      emojiReact({message,emoji:"ok_hand"});
       playerClearQueue(message.guild?.id);
+    } else {
+      message.reactions.removeAll().catch();
+      emojiReact({message,emoji:"poop"});
     }
   },
 };
