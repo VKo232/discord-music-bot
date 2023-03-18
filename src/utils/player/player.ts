@@ -142,6 +142,9 @@ export class CustomPlayer {
   public unpause() {
     this.audioPlayer?.unpause();
   }
+  public getQueue() {
+    return this.queue;
+  }
   destroy() {
     this.audioPlayer?.stop();
     this.queue = [];

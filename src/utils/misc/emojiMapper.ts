@@ -41,6 +41,8 @@ const discordToUnicodeMap: { [discordEmoji: string]: string } = {
     "crown": "👑",
     "money_with_wings": "💸",
     "gem": "💎",
+    "arrow_backward":"◀️",
+    "arrow_forward":"▶️",
     // Add more Discord emojis and their corresponding Unicode emojis here
   };
   
