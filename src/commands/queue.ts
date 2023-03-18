@@ -1,12 +1,13 @@
 import {
-  Client,
-  EmbedBuilder,
-  Message,
-  MessageReaction,
-  SlashCommandBuilder,
-  TextChannel,
-  User,
+    Client,
+    EmbedBuilder,
+    Message,
+    MessageReaction,
+    SlashCommandBuilder,
+    TextChannel,
+    User
 } from "discord.js";
+import { Config } from "../config";
 import { emojiReact } from "../utils/bot/bot-service";
 import { getEmoji } from "../utils/misc/emojiMapper";
 import { PaginatedQueue } from "../utils/misc/paginator";
@@ -14,7 +15,7 @@ import { hasPlayer, playerGetQueue } from "../utils/player/player-service";
 
 const PREV_EMOJI = "arrow_backward";
 const NEXT_EMOJI = "arrow_forward";
-
+const prefix = Config.prefix;
 module.exports = {
   data: new SlashCommandBuilder()
     .setName("queue")
@@ -29,7 +30,17 @@ module.exports = {
     }
     if (message.guild?.id && hasPlayer(message.guild?.id)) {
       const queue = playerGetQueue(message.guild?.id);
-      //   if (queue.length == 0) return;
+      if (queue.length == 0) {
+        (message.channel as TextChannel).send({
+          embeds: [
+            {
+              ...queueTemplateEmbed,
+              description: `0 items in the queue!!!\n Add some using the ${prefix}p or ${prefix}play command`,
+            },
+          ],
+        });
+        return;
+      }
       const paginatedQueue = new PaginatedQueue<ITrack>(queue);
       const queueMessage = await (message.channel as TextChannel).send({
         embeds: [refreshTemplate(paginatedQueue)],
@@ -45,10 +56,6 @@ module.exports = {
 const queueTemplateEmbed = {
   color: 0x0099ff,
   title: "Playlist",
-  author: {
-    name: "victor",
-    icon_url: "https://cdn.discordapp.com/embed/avatars/1.png",
-  },
 };
 
 const refreshTemplate = (paginatedQueue: PaginatedQueue<ITrack>) => {

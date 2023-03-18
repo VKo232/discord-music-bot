@@ -12,22 +12,24 @@ export const addSongs = async ({
   try {
     // parse argument string
     if (!(args.length > 0 && args[0].trim() !== "")) {
-      return;
+      return 1;
     }
     const player = getPlayer(guildID);
     if (!player) {
       console.log("ERROR: cant get player");
-      return;
+      return 2;
     }
     const parsed_song: ParsedSongType | null = parseArguments(args);
     // send arguments to be handled by the song handler
     if (!parsed_song) {
-      return;
+      return 3;
     }
     const tracks = await getTracks(parsed_song);
     await playerAddTracks(guildID, tracks);
+    return 0;
   } catch (err) {
     console.log("ERROR: addSongs", err);
+    return 4;
   }
 };
 
