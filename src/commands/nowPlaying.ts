@@ -15,16 +15,16 @@ module.exports = {
       return;
     }
     if (message.guild?.id && hasPlayer(message.guild?.id)) {
-      emojiReact({message,emoji:"ok_hand"});
+      emojiReact({ message, emoji: "ok_hand" });
       const currSong = playerNowPlaying(message.guild?.id);
-      if(currSong) {
-          await message.reply(`Now playing ${currSong.name} by ${currSong.artists.join(', ')} `)
+      if (currSong) {
+        await message.reply(
+          `Now playing ${currSong.name} by ${currSong.artists.join(", ")} `
+        );
       }
     } else {
       message.reactions.removeAll().catch();
-      emojiReact({message,emoji:"poop"});
-    } 
-
-
-},
+      emojiReact({ message, emoji: "poop" });
+    }
+  },
 };

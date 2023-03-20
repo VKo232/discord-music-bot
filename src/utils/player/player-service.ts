@@ -1,9 +1,9 @@
 import { CustomPlayer } from "./player";
 const allPlayers: Map<string, CustomPlayer> = new Map<string, CustomPlayer>();
 
-export const getPlayer = (guildID: string) => {
+export const getPlayer = async (guildID: string) => {
   if (!hasPlayer(guildID)) {
-    const newPlayer = new CustomPlayer(guildID);
+    const newPlayer = await CustomPlayer.createPlayer(guildID);
     allPlayers.set(guildID, newPlayer);
     return newPlayer;
   } else {

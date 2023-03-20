@@ -9,6 +9,7 @@ import {
 } from "@discordjs/voice";
 import play, { YouTubeStream } from "play-dl";
 import { sendMessage } from "../bot/bot-service";
+import { NowPlayingListener } from "../misc/nowPlayingListener";
 import { getYTlink } from "../song/youtube-api";
 
 export class CustomPlayer {
@@ -18,11 +19,18 @@ export class CustomPlayer {
   private currSong: INowPlaying | null = null;
   private volume: number = 0.27;
   private resource: AudioResource | null = null;
+  private nowPlayingListener: NowPlayingListener | null | undefined;
 
-  constructor(guildID: string) {
+  private constructor(guildID: string, listener: NowPlayingListener | null) {
     console.log("creating player");
     this.guildID = guildID;
     this.setupAudioPlayer();
+    this.nowPlayingListener = listener;
+  }
+  public static async createPlayer(guildID:string) {
+    const listener = await NowPlayingListener.createNowPlayingListener(guildID);
+
+    return new CustomPlayer(guildID,listener);
   }
 
   public add = async (tracks: ITrack[]) => {
@@ -94,7 +102,7 @@ export class CustomPlayer {
       let ytlink = await getYTlink(newSong);
       if (ytlink) {
         console.log("got yt link", ytlink);
-        this.currSong = { ...newSong, ytlink };
+        this.setCurrSong({ ...newSong, ytlink });
         var stream = await play.stream(ytlink, {
           discordPlayerCompatibility: true,
         });
@@ -108,7 +116,10 @@ export class CustomPlayer {
       }
     } while (this.currSong == null && this.queue.length);
   }
-
+  private async setCurrSong(song: INowPlaying) {
+    this.currSong = song;
+    this.nowPlayingListener?.onNewSong(song);
+  }
   private async playSong(stream: YouTubeStream) {
     let resource = createAudioResource(stream.stream, {
       inputType: stream.type,
@@ -148,6 +159,7 @@ export class CustomPlayer {
   destroy() {
     this.audioPlayer?.stop();
     this.queue = [];
+    this.nowPlayingListener?.onDelete();
     this.cleanResource();
   }
 }
