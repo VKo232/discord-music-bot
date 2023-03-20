@@ -18,9 +18,10 @@ module.exports = {
     const command = commands.get(directive);
     try {
       if (command) command.execute(client.client, message, args);
+      else emojiReact({ message, emoji: "poop" });
     } catch (error) {
       message.reactions.removeAll().catch();
-      emojiReact({message,emoji:"poop"})
+      emojiReact({ message, emoji: "poop" });
       console.error(`Error executing ${command.commandName}`);
       console.error(error);
     }

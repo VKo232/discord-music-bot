@@ -18,7 +18,7 @@ module.exports = {
       !message.guild?.id || // something broke
       !message.guild?.voiceAdapterCreator // something broke
     ) {
-      emojiReact({message,emoji:"thumbsdown"})
+      emojiReact({ message, emoji: "thumbsdown" });
       await message.reply("Join a voice call first");
       return;
     }
@@ -33,7 +33,10 @@ module.exports = {
     );
     console.log("joined channel");
     // call add to queue
-    await addSongs({ guildID: message.guild.id, args: args });
+    let res = await addSongs({ guildID: message.guild.id, args: args });
+    if (res != 0) {
+      message.reactions.removeAll().then(()=>emojiReact({message,emoji:"thumbsdown"}));
+    }
     console.log("added songs");
   },
 };

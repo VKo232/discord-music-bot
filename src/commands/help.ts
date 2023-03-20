@@ -43,11 +43,11 @@ const commands = [
   //     description:
   //       "Loops the queue",
   //   },
-  //   {
-  //     name: Config.prefix + "queue",
-  //     description:
-  //       "Shows you the queue of songs",
-  //   },
+    {
+      name: Config.prefix + "queue",
+      description:
+        "Shows you the queue of songs",
+    },
   {
     name: Config.prefix + "stop",
     description: "Leaves the voice channel",

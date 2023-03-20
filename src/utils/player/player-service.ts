@@ -34,13 +34,16 @@ export const playerNowPlaying = (
 ): INowPlaying | null | undefined => {
   return allPlayers.get(guildID)?.nowPlaying();
 };
-
+export const playerGetQueue = (guildID: string): ITrack[] => {
+  return allPlayers.get(guildID) ? allPlayers.get(guildID)!.getQueue() : [];
+};
 export const playerPause = (guildID: string) => {
   allPlayers.get(guildID)?.pause();
 };
 export const playerUnpause = (guildID: string) => {
   allPlayers.get(guildID)?.unpause();
 };
+
 export const playerDestroy = (guildID: string) => {
   const thisPlayer = allPlayers.get(guildID);
   if (thisPlayer) {
