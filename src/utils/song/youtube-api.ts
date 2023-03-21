@@ -4,7 +4,7 @@ import { google, youtube_v3 } from "googleapis";
 import { Config } from "../../config";
 import * as https from 'https';
 import * as cheerio from 'cheerio';
-import fetch from 'node-fetch'
+
 const youPattern =
   /^https?:\/\/(www\.)?youtube\.com\/(watch\?v=[a-zA-Z0-9_-]+|playlist\?list=[a-zA-Z0-9_-]+)(\&.*)?$/;
 
@@ -18,84 +18,69 @@ export const searchYTlink = async (query: string): Promise<ITrack[]> => {
     if (query === "") {
       return [];
     }
-    // const searchParams = {
-    //   part: ["id", "snippet"],
-    //   type: ["video"],
-    //   q: query,
-    //   maxResults: 1,
-    // };
-
-    // const res = await youtube.search.list(searchParams);
-    // if (res?.data?.items && res?.data?.items[0]) {
-    //   const firstResult = res.data.items[0];
-    //   if (firstResult.snippet?.title && firstResult.snippet?.channelTitle) {
-    //     return [
-    //       {
-    //         name: firstResult!.snippet!.title,
-    //         artists: [firstResult!.snippet!.channelTitle],
-    //         source: `https://www.youtube.com/watch?v=${
-    //           firstResult!.id!.videoId
-    //         }`,
-    //       },
-    //     ];
-    //   }
-    // }
 
     const url = new URL(`https://www.youtube.com/results`);
     url.searchParams.set('search_query', query);
-
-    // const data = await fetch(url.href).then(res => res.text());
-    // const $ = cheerio.load(data);
-
-    // const videos: ITrack[] = [];
     
-    // $('div#contents > ytd-video-renderer').each((i, el) => {
-    //   const videoId = $(el).find('a#thumbnail').attr('href')?.split('=')[1] || '';
-    //   const title = $(el).find('#video-title').text().trim();
-    //   const channelTitle = $(el).find('#channel-name #text').text().trim();
-    //   console.log("vid", videoId)
-
-    //   videos.push({
-    //     name: title,
-    //     artists: [channelTitle],
-    //     source: `https://www.youtube.com/watch?v=${
-    //                 videoId
-    //               }`,
-    //   });
-    // });
-    // console.log(videos)
-    // return videos;
-
-
     return new Promise((resolve, reject) => {
-      https.get(url.toString(), res => {
+      https.get(url.href, res => {
         let data = '';
         res.on('data', chunk => (data += chunk));
         res.on('end', () => {
           const $ = cheerio.load(data);
           const videos: ITrack[] = [];
+
+          const vIdIndex = $.html().indexOf("videoId\":");
+          if (vIdIndex == -1) {
+            reject(new Error('No Resutls Found'));
+          }
+          const videoId = $.html().substring(vIdIndex + 10, $.html().indexOf("\"", vIdIndex + 10))
           
-          console.log(data)
-          const first = $('div#contents > ytd-video-renderer').first();
-          console.log("first", first)
-          const videoId = first.find('a#thumbnail').attr('href')?.split('=')[1] || '';
-          const title = first.find('#video-title').text().trim();
-          const channelTitle = first.find('#channel-name #text').text().trim();
+          const titleIndex = $.html().indexOf("\"title\":{\"runs\":[{\"text\":\"");
+          const title = $.html().substring(titleIndex + 26, $.html().indexOf("\"", titleIndex + 26))
+
+          const channelIndex = $.html().indexOf("\"longBylineText\":{\"runs\":[{\"text\":\"");
+          const channelTitle = $.html().substring(channelIndex + 35, $.html().indexOf("\"", channelIndex + 35))
+          
           videos.push({
             name: title,
               artists: [channelTitle],
               source: `https://www.youtube.com/watch?v=${
                           videoId
-                        }`,
+                      }`,
           })
-          console.log(videos)
           resolve(videos);
         });
       }).on('error', reject);
     });
 
   } catch (err) {
-    console.log("error getting yt link for ", query);
+    try {
+      const searchParams = {
+        part: ["id", "snippet"],
+        type: ["video"],
+        q: query,
+        maxResults: 1,
+      };
+
+      const res = await youtube.search.list(searchParams);
+      if (res?.data?.items && res?.data?.items[0]) {
+        const firstResult = res.data.items[0];
+        if (firstResult.snippet?.title && firstResult.snippet?.channelTitle) {
+          return [
+            {
+              name: firstResult!.snippet!.title,
+              artists: [firstResult!.snippet!.channelTitle],
+              source: `https://www.youtube.com/watch?v=${
+                firstResult!.id!.videoId
+              }`,
+            },
+          ];
+        }
+      }
+    } catch (err) {
+      console.log("error getting yt link for ", query);
+    }
   }
   return [];
 };
