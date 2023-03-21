@@ -1,15 +1,12 @@
 // https://www.npmjs.com/package/ytdl-core
 
-import { google, youtube_v3 } from "googleapis";
-import { Config } from "../../config";
+import { youtube_v3 } from "googleapis";
+import { YoutubeQuotaManager } from "./quota-manager";
 
 const youPattern =
   /^https?:\/\/(www\.)?youtube\.com\/(watch\?v=[a-zA-Z0-9_-]+|playlist\?list=[a-zA-Z0-9_-]+)(\&.*)?$/;
 
-const youtube = google.youtube({
-  version: "v3",
-  auth: Config.GOOGLE_API_KEY,
-});
+const youtube = new YoutubeQuotaManager();
 export const searchYTlink = async (query: string): Promise<ITrack[]> => {
   try {
     if (query === "") {
@@ -22,7 +19,7 @@ export const searchYTlink = async (query: string): Promise<ITrack[]> => {
       maxResults: 1,
     };
     // const res = await youtube.search.list(searchParams);
-    const res = await youtube.search.list(searchParams);
+    const res = await youtube.search().list(searchParams);
     if (res?.data?.items && res?.data?.items[0]) {
       const firstResult = res.data.items[0];
       if (firstResult.snippet?.title && firstResult.snippet?.channelTitle) {
@@ -109,7 +106,7 @@ const getVideosFromPlaylist = async (playlistId: string): Promise<ITrack[]> => {
   try {
     do {
       count++;
-      const { data }:any = await youtube.playlistItems.list({
+      const { data }:any = await youtube.playlistItems().list({
         part: ["snippet"],
         playlistId: playlistId,
         maxResults: 50,
@@ -148,7 +145,7 @@ const getVideosFromVideo = async (videoId: string): Promise<ITrack[]> => {
     id: [videoId],
   };
 
-  const videosResponse = await youtube.videos.list(videosParams);
+  const videosResponse = await youtube.videos().list(videosParams);
   if (videosResponse?.data?.items) {
     videosResponse.data.items.forEach((video) => {
       if (video?.snippet?.title && video?.snippet?.channelTitle) {

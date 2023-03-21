@@ -7,10 +7,7 @@ import {
   TextChannel,
   User,
 } from "discord.js";
-import {
-  addMessageReactListener,
-  addReacts,
-} from "../utils/misc/messageUtils";
+import { addMessageReactListener, addReacts } from "../utils/misc/messageUtils";
 import { Config } from "../config";
 import { emojiReact } from "../utils/bot/bot-service";
 import { getEmoji } from "../utils/misc/emojiMapper";
@@ -50,11 +47,11 @@ module.exports = {
         embeds: [getRefreshTemplate(paginatedQueue)()],
       });
       addReacts(queueMessage, [PREV_EMOJI, NEXT_EMOJI]);
-      addMessageReactListener(
+      await addMessageReactListener(
         queueMessage,
         queueReactfilter,
         60000,
-        getReactHandler(paginatedQueue,queueMessage,),
+        getReactHandler(paginatedQueue, queueMessage)
       );
     } else {
       message.reactions.removeAll().catch();
@@ -80,10 +77,13 @@ const getRefreshTemplate = (paginatedQueue: PaginatedQueue<ITrack>) => {
         text: `Page ${paginatedQueue.currentPage}/${paginatedQueue.totalPages}`,
       },
     };
-  }
-}
+  };
+};
 
-const getReactHandler = (paginatedQueue: PaginatedQueue<ITrack>,message:Message) => {
+const getReactHandler = (
+  paginatedQueue: PaginatedQueue<ITrack>,
+  message: Message
+) => {
   return (reaction: MessageReaction | undefined) => {
     if (reaction?.emoji.name === getEmoji(PREV_EMOJI)) {
       paginatedQueue.previousPage();

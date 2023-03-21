@@ -22,7 +22,7 @@ export class NowPlayingListener {
     this.textChannelID = textChannelID;
     this.msgCollector = (
       client.client.channels.cache.get(textChannelID) as TextChannel
-    )?.createMessageCollector({ time: 1000 * 60 * 60 * 3 });
+    )?.createMessageCollector({ time: 1000 * 60 * 60 * 10 });
     this.isOld = true;
     this.msgCollector.on("collect", (message) => {
       this.isOld = this.isOld || !message.author.bot;
