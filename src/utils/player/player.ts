@@ -101,12 +101,20 @@ export class CustomPlayer {
 
       let ytlink = await getYTlink(newSong);
       if (ytlink) {
+        try {
         console.log("got yt link", ytlink);
         this.setCurrSong({ ...newSong, ytlink });
         var stream = await play.stream(ytlink, {
           discordPlayerCompatibility: true,
         });
         this.playSong(stream);
+      } catch(err) {
+        console.log("error getting song", newSong);
+        sendMessage({
+          message: "can't play " + newSong.name,
+          guildID: this.guildID,
+        });
+      }
       } else {
         console.log("error getting song", newSong);
         sendMessage({
