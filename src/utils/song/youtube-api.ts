@@ -1,16 +1,16 @@
 // https://www.npmjs.com/package/ytdl-core
 
 import { google, youtube_v3 } from "googleapis";
-import { Config } from "../../config";
-import * as https from 'https';
 import * as cheerio from 'cheerio';
 import { YoutubeQuotaManager } from "./quota-manager";
+import axios from 'axios'
 
 const youPattern =
   /^https?:\/\/(www\.)?youtube\.com\/(watch\?v=[a-zA-Z0-9_-]+|playlist\?list=[a-zA-Z0-9_-]+)(\&.*)?$/;
 
 const youtube = new YoutubeQuotaManager();
 export const searchYTlink = async (query: string): Promise<ITrack[]> => {
+  const videos: ITrack[] = [];
 
   try {
     if (query === "") {
@@ -19,38 +19,31 @@ export const searchYTlink = async (query: string): Promise<ITrack[]> => {
 
     const url = new URL(`https://www.youtube.com/results`);
     url.searchParams.set('search_query', query);
+    const html = await axios.get(url.href);
+
+    const $ = cheerio.load(html.data);
+
+    const vIdIndex = $.html().indexOf("videoId\":");
+    if (vIdIndex == -1) {
+      throw new Error('No Results Found');
+    }
+    const videoId = $.html().substring(vIdIndex + 10, $.html().indexOf("\"", vIdIndex + 10))
     
-    return new Promise((resolve, reject) => {
-      https.get(url.href, res => {
-        let data = '';
-        res.on('data', chunk => (data += chunk));
-        res.on('end', () => {
-          const $ = cheerio.load(data);
-          const videos: ITrack[] = [];
+    const titleIndex = $.html().indexOf("\"title\":{\"runs\":[{\"text\":\"");
+    const title = $.html().substring(titleIndex + 26, $.html().indexOf("\"", titleIndex + 26))
 
-          const vIdIndex = $.html().indexOf("videoId\":");
-          if (vIdIndex == -1) {
-            reject(new Error('No Resutls Found'));
-          }
-          const videoId = $.html().substring(vIdIndex + 10, $.html().indexOf("\"", vIdIndex + 10))
-          
-          const titleIndex = $.html().indexOf("\"title\":{\"runs\":[{\"text\":\"");
-          const title = $.html().substring(titleIndex + 26, $.html().indexOf("\"", titleIndex + 26))
+    const channelIndex = $.html().indexOf("\"longBylineText\":{\"runs\":[{\"text\":\"");
+    const channelTitle = $.html().substring(channelIndex + 35, $.html().indexOf("\"", channelIndex + 35))
+    
+    videos.push({
+      name: title,
+        artists: [channelTitle],
+        source: `https://www.youtube.com/watch?v=${
+                    videoId
+                }`,
+    })
 
-          const channelIndex = $.html().indexOf("\"longBylineText\":{\"runs\":[{\"text\":\"");
-          const channelTitle = $.html().substring(channelIndex + 35, $.html().indexOf("\"", channelIndex + 35))
-          
-          videos.push({
-            name: title,
-              artists: [channelTitle],
-              source: `https://www.youtube.com/watch?v=${
-                          videoId
-                      }`,
-          })
-          resolve(videos);
-        });
-      }).on('error', reject);
-    });
+    return videos;
 
   } catch (err) {
     try {
@@ -76,11 +69,13 @@ export const searchYTlink = async (query: string): Promise<ITrack[]> => {
           ];
         }
       }
+      return videos;
     } catch (err) {
       console.log("error getting yt link for ", query);
       youtube.rotateKey();
+      return videos;
+    }
   }
-  return [];
 };
 
 export const getYTlink = async (track: ITrack): Promise<string> => {
