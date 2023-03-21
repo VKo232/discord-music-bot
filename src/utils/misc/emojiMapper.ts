@@ -43,6 +43,9 @@ const discordToUnicodeMap: { [discordEmoji: string]: string } = {
     "gem": "💎",
     "arrow_backward":"◀️",
     "arrow_forward":"▶️",
+    "play_pause":"⏯️",
+    "pause_button":"⏸️",
+    "track_next":"⏭️",
     // Add more Discord emojis and their corresponding Unicode emojis here
   };
   

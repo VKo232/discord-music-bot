@@ -13,6 +13,9 @@ const Config = {
   SPOTIFY_CLIENT_ID: process.env.SPOTIFY_CLIENT_ID,
   SPOTIFY_CLIENT_SECRET: process.env.SPOTIFY_CLIENT_SECRET,
   GOOGLE_API_KEY:process.env.GOOGLE_API_KEY,
+  GOOGLE_API_KEY1:process.env.GOOGLE_API_KEY1,
+  GOOGLE_API_KEY2:process.env.GOOGLE_API_KEY2,
+  
 };
 export {Config}
   

@@ -4,14 +4,12 @@ import { google, youtube_v3 } from "googleapis";
 import { Config } from "../../config";
 import * as https from 'https';
 import * as cheerio from 'cheerio';
+import { YoutubeQuotaManager } from "./quota-manager";
 
 const youPattern =
   /^https?:\/\/(www\.)?youtube\.com\/(watch\?v=[a-zA-Z0-9_-]+|playlist\?list=[a-zA-Z0-9_-]+)(\&.*)?$/;
 
-const youtube = google.youtube({
-  version: "v3",
-  auth: Config.GOOGLE_API_KEY,
-});
+const youtube = new YoutubeQuotaManager();
 export const searchYTlink = async (query: string): Promise<ITrack[]> => {
 
   try {
@@ -62,8 +60,8 @@ export const searchYTlink = async (query: string): Promise<ITrack[]> => {
         q: query,
         maxResults: 1,
       };
-
-      const res = await youtube.search.list(searchParams);
+      // const res = await youtube.search.list(searchParams);
+      const res = await youtube.search().list(searchParams);
       if (res?.data?.items && res?.data?.items[0]) {
         const firstResult = res.data.items[0];
         if (firstResult.snippet?.title && firstResult.snippet?.channelTitle) {
@@ -80,7 +78,7 @@ export const searchYTlink = async (query: string): Promise<ITrack[]> => {
       }
     } catch (err) {
       console.log("error getting yt link for ", query);
-    }
+      youtube.rotateKey();
   }
   return [];
 };
@@ -148,37 +146,34 @@ const getVideosFromPlaylist = async (playlistId: string): Promise<ITrack[]> => {
   let tracks: ITrack[] = [];
   let count = 0;
   let nextPageToken: string | null | undefined = undefined;
-  try {
-    do {
-      count++;
-      const { data }:any = await youtube.playlistItems.list({
-        part: ["snippet"],
-        playlistId: playlistId,
-        maxResults: 50,
-        pageToken: nextPageToken,
-      });
-      if (!data?.items) {
-        nextPageToken = null;
-        continue;
-      }
-      const newTracks: ITrack[] | undefined = data?.items?.map((item:any) => {
-        const { title, channelTitle } = item?.snippet || {};
-        return {
-          name: title,
-          artists: [channelTitle],
-          source: `https://www.youtube.com/watch?v=${item.snippet.resourceId.videoId}`,
-        };
-      });
-      if (newTracks) {
-        tracks =tracks.concat(newTracks);
-        nextPageToken = data.nextPageToken;
-      } else {
-        nextPageToken = null;
-      }
-    } while (nextPageToken && count <3);
-  } catch (err) {
-    console.log("error getting videos from youtube playlist", err);
-  }
+  do {
+    count++;
+    const { data }: any = await youtube.playlistItems().list({
+      part: ["snippet"],
+      playlistId: playlistId,
+      maxResults: 50,
+      pageToken: nextPageToken,
+    });
+    if (!data?.items) {
+      nextPageToken = null;
+      continue;
+    }
+    const newTracks: ITrack[] | undefined = data?.items?.map((item: any) => {
+      const { title, channelTitle } = item?.snippet || {};
+      return {
+        name: title,
+        artists: [channelTitle],
+        source: `https://www.youtube.com/watch?v=${item.snippet.resourceId.videoId}`,
+      };
+    });
+    if (newTracks) {
+      tracks = tracks.concat(newTracks);
+      nextPageToken = data.nextPageToken;
+    } else {
+      nextPageToken = null;
+    }
+  } while (nextPageToken && count < 3);
+
   return tracks;
 };
 
@@ -190,7 +185,7 @@ const getVideosFromVideo = async (videoId: string): Promise<ITrack[]> => {
     id: [videoId],
   };
 
-  const videosResponse = await youtube.videos.list(videosParams);
+  const videosResponse = await youtube.videos().list(videosParams);
   if (videosResponse?.data?.items) {
     videosResponse.data.items.forEach((video) => {
       if (video?.snippet?.title && video?.snippet?.channelTitle) {
@@ -222,6 +217,7 @@ export const getYTTracks = async (link: string): Promise<ITrack[]> => {
     return tracks;
   } catch (err) {
     console.log("error getting yttracks", link);
+    youtube.rotateKey();
   }
   return [];
 };

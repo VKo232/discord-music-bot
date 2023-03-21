@@ -14,7 +14,7 @@ export const addSongs = async ({
     if (!(args.length > 0 && args[0].trim() !== "")) {
       return 1;
     }
-    const player = getPlayer(guildID);
+    const player = await getPlayer(guildID);
     if (!player) {
       console.log("ERROR: cant get player");
       return 2;
