@@ -36,6 +36,7 @@ export const searchYTlink = async (query: string): Promise<ITrack[]> => {
     }
   } catch (err) {
     console.log("error getting yt link for ", query);
+    youtube.rotateKey();
   }
   return [];
 };
@@ -103,37 +104,34 @@ const getVideosFromPlaylist = async (playlistId: string): Promise<ITrack[]> => {
   let tracks: ITrack[] = [];
   let count = 0;
   let nextPageToken: string | null | undefined = undefined;
-  try {
-    do {
-      count++;
-      const { data }:any = await youtube.playlistItems().list({
-        part: ["snippet"],
-        playlistId: playlistId,
-        maxResults: 50,
-        pageToken: nextPageToken,
-      });
-      if (!data?.items) {
-        nextPageToken = null;
-        continue;
-      }
-      const newTracks: ITrack[] | undefined = data?.items?.map((item:any) => {
-        const { title, channelTitle } = item?.snippet || {};
-        return {
-          name: title,
-          artists: [channelTitle],
-          source: `https://www.youtube.com/watch?v=${item.snippet.resourceId.videoId}`,
-        };
-      });
-      if (newTracks) {
-        tracks =tracks.concat(newTracks);
-        nextPageToken = data.nextPageToken;
-      } else {
-        nextPageToken = null;
-      }
-    } while (nextPageToken && count <3);
-  } catch (err) {
-    console.log("error getting videos from youtube playlist", err);
-  }
+  do {
+    count++;
+    const { data }: any = await youtube.playlistItems().list({
+      part: ["snippet"],
+      playlistId: playlistId,
+      maxResults: 50,
+      pageToken: nextPageToken,
+    });
+    if (!data?.items) {
+      nextPageToken = null;
+      continue;
+    }
+    const newTracks: ITrack[] | undefined = data?.items?.map((item: any) => {
+      const { title, channelTitle } = item?.snippet || {};
+      return {
+        name: title,
+        artists: [channelTitle],
+        source: `https://www.youtube.com/watch?v=${item.snippet.resourceId.videoId}`,
+      };
+    });
+    if (newTracks) {
+      tracks = tracks.concat(newTracks);
+      nextPageToken = data.nextPageToken;
+    } else {
+      nextPageToken = null;
+    }
+  } while (nextPageToken && count < 3);
+
   return tracks;
 };
 
@@ -177,6 +175,7 @@ export const getYTTracks = async (link: string): Promise<ITrack[]> => {
     return tracks;
   } catch (err) {
     console.log("error getting yttracks", link);
+    youtube.rotateKey();
   }
   return [];
 };
