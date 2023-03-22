@@ -22,11 +22,11 @@ export const searchYTlink = async (query: string): Promise<ITrack[]> => {
 
     const $ = cheerio.load(html.data);
 
-    const vIdIndex = $.html().indexOf("videoId\":");
+    const vIdIndex = $.html().indexOf("\"videoRenderer\":{\"videoId\":\"");
     if (vIdIndex == -1) {
       throw new Error('No Results Found');
     }
-    const videoId = $.html().substring(vIdIndex + 10, $.html().indexOf("\"", vIdIndex + 10))
+    const videoId = $.html().substring(vIdIndex + 28, $.html().indexOf("\"", vIdIndex + 28))
     
     const titleIndex = $.html().indexOf("\"title\":{\"runs\":[{\"text\":\"");
     const title = $.html().substring(titleIndex + 26, $.html().indexOf("\"", titleIndex + 26))
