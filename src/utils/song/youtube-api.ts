@@ -1,17 +1,58 @@
 // https://www.npmjs.com/package/ytdl-core
 
 import { youtube_v3 } from "googleapis";
+import * as cheerio from 'cheerio';
 import { YoutubeQuotaManager } from "./quota-manager";
+import axios from 'axios'
 
 const youPattern =
   /^https?:\/\/(www\.)?youtube\.com\/(watch\?v=[a-zA-Z0-9_-]+|playlist\?list=[a-zA-Z0-9_-]+)(\&.*)?$/;
 
 const youtube = new YoutubeQuotaManager();
 export const searchYTlink = async (query: string): Promise<ITrack[]> => {
+  const videos: ITrack[] = [];
   try {
     if (query === "") {
       return [];
     }
+
+    const url = new URL(`https://www.youtube.com/results`);
+    url.searchParams.set('search_query', query);
+    const html = await axios.get(url.href);
+
+    const $ = cheerio.load(html.data);
+
+    const vIdIndex = $.html().indexOf("\"videoRenderer\":{\"videoId\":\"");
+    if (vIdIndex == -1) {
+      throw new Error('No Results Found');
+    }
+    const videoId = $.html().substring(vIdIndex + 28, $.html().indexOf("\"", vIdIndex + 28))
+    
+    const titleIndex = $.html().indexOf("\"title\":{\"runs\":[{\"text\":\"", vIdIndex);
+    const title = $.html().substring(titleIndex + 26, $.html().indexOf("\"", titleIndex + 26))
+
+    const channelIndex = $.html().indexOf("\"longBylineText\":{\"runs\":[{\"text\":\"", titleIndex);
+    const channelTitle = $.html().substring(channelIndex + 35, $.html().indexOf("\"", channelIndex + 35))
+    
+    videos.push({
+      name: title,
+        artists: [channelTitle],
+        source: `https://www.youtube.com/watch?v=${
+                    videoId
+                }`,
+    })
+
+    return videos;
+
+  } catch (err) {
+    return await fallbackSearchYTLink(query);
+  }
+};
+
+export const fallbackSearchYTLink = async (query: string): Promise<ITrack[]>  => {
+  console.log("fallback")
+  const videos: ITrack[] = [];
+  try {
     const searchParams = {
       part: ["id", "snippet"],
       type: ["video"],
@@ -34,12 +75,13 @@ export const searchYTlink = async (query: string): Promise<ITrack[]> => {
         ];
       }
     }
+    return videos;
   } catch (err) {
     console.log("error getting yt link for ", query);
     youtube.rotateKey();
+    return [];
   }
-  return [];
-};
+}
 
 export const getYTlink = async (track: ITrack): Promise<string> => {
   try {
