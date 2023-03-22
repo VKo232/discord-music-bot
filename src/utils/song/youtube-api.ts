@@ -1,6 +1,6 @@
 // https://www.npmjs.com/package/ytdl-core
 
-import { google, youtube_v3 } from "googleapis";
+import { youtube_v3 } from "googleapis";
 import * as cheerio from 'cheerio';
 import { YoutubeQuotaManager } from "./quota-manager";
 import axios from 'axios'
@@ -11,7 +11,6 @@ const youPattern =
 const youtube = new YoutubeQuotaManager();
 export const searchYTlink = async (query: string): Promise<ITrack[]> => {
   const videos: ITrack[] = [];
-
   try {
     if (query === "") {
       return [];
@@ -46,37 +45,43 @@ export const searchYTlink = async (query: string): Promise<ITrack[]> => {
     return videos;
 
   } catch (err) {
-    try {
-      const searchParams = {
-        part: ["id", "snippet"],
-        type: ["video"],
-        q: query,
-        maxResults: 1,
-      };
-      // const res = await youtube.search.list(searchParams);
-      const res = await youtube.search().list(searchParams);
-      if (res?.data?.items && res?.data?.items[0]) {
-        const firstResult = res.data.items[0];
-        if (firstResult.snippet?.title && firstResult.snippet?.channelTitle) {
-          return [
-            {
-              name: firstResult!.snippet!.title,
-              artists: [firstResult!.snippet!.channelTitle],
-              source: `https://www.youtube.com/watch?v=${
-                firstResult!.id!.videoId
-              }`,
-            },
-          ];
-        }
-      }
-      return videos;
-    } catch (err) {
-      console.log("error getting yt link for ", query);
-      youtube.rotateKey();
-      return videos;
-    }
+    return await fallbackSearchYTLink(query);
   }
 };
+
+export const fallbackSearchYTLink = async (query: string): Promise<ITrack[]>  => {
+  console.log("fallback")
+  const videos: ITrack[] = [];
+  try {
+    const searchParams = {
+      part: ["id", "snippet"],
+      type: ["video"],
+      q: query,
+      maxResults: 1,
+    };
+    // const res = await youtube.search.list(searchParams);
+    const res = await youtube.search().list(searchParams);
+    if (res?.data?.items && res?.data?.items[0]) {
+      const firstResult = res.data.items[0];
+      if (firstResult.snippet?.title && firstResult.snippet?.channelTitle) {
+        return [
+          {
+            name: firstResult!.snippet!.title,
+            artists: [firstResult!.snippet!.channelTitle],
+            source: `https://www.youtube.com/watch?v=${
+              firstResult!.id!.videoId
+            }`,
+          },
+        ];
+      }
+    }
+    return videos;
+  } catch (err) {
+    console.log("error getting yt link for ", query);
+    youtube.rotateKey();
+    return [];
+  }
+}
 
 export const getYTlink = async (track: ITrack): Promise<string> => {
   try {

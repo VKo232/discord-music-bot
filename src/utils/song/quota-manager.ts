@@ -15,7 +15,6 @@ export class YoutubeQuotaManager {
 
   constructor() {
     for (const key of this.apikeys) {
-      console.log(key);
       const youtube = google.youtube({
         version: "v3",
         auth: Config.GOOGLE_API_KEY,
