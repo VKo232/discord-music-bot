@@ -28,10 +28,10 @@ export const searchYTlink = async (query: string): Promise<ITrack[]> => {
     }
     const videoId = $.html().substring(vIdIndex + 28, $.html().indexOf("\"", vIdIndex + 28))
     
-    const titleIndex = $.html().indexOf("\"title\":{\"runs\":[{\"text\":\"");
+    const titleIndex = $.html().indexOf("\"title\":{\"runs\":[{\"text\":\"", vIdIndex);
     const title = $.html().substring(titleIndex + 26, $.html().indexOf("\"", titleIndex + 26))
 
-    const channelIndex = $.html().indexOf("\"longBylineText\":{\"runs\":[{\"text\":\"");
+    const channelIndex = $.html().indexOf("\"longBylineText\":{\"runs\":[{\"text\":\"", titleIndex);
     const channelTitle = $.html().substring(channelIndex + 35, $.html().indexOf("\"", channelIndex + 35))
     
     videos.push({
