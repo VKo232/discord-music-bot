@@ -1,6 +1,6 @@
 import { Client, Message, SlashCommandBuilder } from "discord.js";
 import { emojiReact } from "../utils/bot/bot-service";
-import { hasPlayer, playerMove} from "../utils/player/player-service";
+import { hasPlayer, playerGetQueue, playerMove} from "../utils/player/player-service";
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -14,7 +14,8 @@ module.exports = {
     if (!message.guild?.id) {
       return;
     }
-    if (message.guild?.id && hasPlayer(message.guild?.id) && args.length == 1) {
+    const length = playerGetQueue(message.guild?.id).length;
+    if (message.guild?.id && hasPlayer(message.guild?.id) && args.length == 1 && parseInt(args[0]) - 1 <= length && parseInt(args[0]) > 0) {
         emojiReact({message,emoji:"ok_hand"});
         playerMove(message.guild?.id, parseInt(args[0]));
     } else {
