@@ -164,6 +164,14 @@ export class CustomPlayer {
   public getQueue() {
     return this.queue;
   }
+  public remove(index: number) {
+    this.queue.splice(index - 1, 1)
+  }
+  public move(index: number) {
+    const track = this.queue[index - 1];
+    this.queue.splice(index - 1, 1);
+    this.queue.unshift(track);
+  }
   destroy() {
     this.audioPlayer?.stop();
     this.queue = [];
