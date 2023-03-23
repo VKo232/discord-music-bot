@@ -80,6 +80,14 @@ const commands = [
   //     description:
   //       "Pulls up the lyrics for the song currently playing",
   //   },
+  {
+    name: Config.prefix + "remove",
+    description: "Removes the requested song"
+  },
+  {
+    name: Config.prefix + "move",
+    description: "Moves the requested song to the front of the queue"
+  },
 ];
 const helpEmbed = {
   color: 0x0099ff,

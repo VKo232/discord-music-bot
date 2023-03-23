@@ -43,7 +43,12 @@ export const playerPause = (guildID: string) => {
 export const playerUnpause = (guildID: string) => {
   allPlayers.get(guildID)?.unpause();
 };
-
+export const playerRemove = (guildID: string, index: number) => {
+  allPlayers.get(guildID)?.remove(index);
+};
+export const playerMove = (guildID: string, index:number) => {
+  allPlayers.get(guildID)?.move(index);
+}
 export const playerDestroy = (guildID: string) => {
   const thisPlayer = allPlayers.get(guildID);
   if (thisPlayer) {
