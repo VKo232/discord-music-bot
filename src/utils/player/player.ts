@@ -20,6 +20,8 @@ export class CustomPlayer {
   private volume: number = 0.27;
   private resource: AudioResource | null = null;
   private nowPlayingListener: NowPlayingListener | null | undefined;
+  private loop: Boolean = false;
+  private loopSong: Boolean = false;
 
   private constructor(guildID: string, listener: NowPlayingListener | null) {
     console.log("creating player");
@@ -70,6 +72,24 @@ export class CustomPlayer {
       console.log("audio player idling");
       setTimeout(async () => {
         if (this.audioPlayer?.state.status === AudioPlayerStatus.Idle) {
+          if (this.loopSong && this.currSong) {
+            const track: ITrack = {
+              name: this.currSong.name,
+              artists: this.currSong.artists,
+              source: this.currSong.source
+            };
+            this.queue.unshift(track);
+          }
+    
+          if (this.loop && this.currSong) {
+            const track: ITrack = {
+              name: this.currSong.name,
+              artists: this.currSong.artists,
+              source: this.currSong.source
+            };
+            this.queue.push(track);
+          }
+          
           this.currSong = null;
           await this.playNext();
         }
@@ -102,19 +122,19 @@ export class CustomPlayer {
       let ytlink = await getYTlink(newSong);
       if (ytlink) {
         try {
-        console.log("got yt link", ytlink);
-        this.setCurrSong({ ...newSong, ytlink });
-        var stream = await play.stream(ytlink, {
-          discordPlayerCompatibility: true,
-        });
-        this.playSong(stream);
-      } catch(err) {
-        console.log("error getting song", newSong);
-        sendMessage({
-          message: "can't play " + newSong.name,
-          guildID: this.guildID,
-        });
-      }
+          console.log("got yt link", ytlink);
+          this.setCurrSong({ ...newSong, ytlink });
+          let stream = await play.stream(ytlink, {
+            discordPlayerCompatibility: true,
+          });
+          this.playSong(stream);
+        } catch(err) {
+          console.log("error getting song", newSong);
+          sendMessage({
+            message: "can't play " + newSong.name,
+            guildID: this.guildID,
+          });
+        } 
       } else {
         console.log("error getting song", newSong);
         sendMessage({
@@ -147,6 +167,7 @@ export class CustomPlayer {
     this.resource?.playStream.read();
   }
   public async skip() {
+    this.loopSong = false;
     this.audioPlayer?.stop();
   }
   public clearQueue() {
@@ -172,7 +193,16 @@ export class CustomPlayer {
     this.queue.splice(index - 1, 1);
     this.queue.unshift(track);
   }
+  public loopQueue() {
+    this.loop = !this.loop;
+    this.loopSong = false;
+  }
+  public loopCurrSong() {
+    this.loopSong = !this.loopSong;
+  }
   destroy() {
+    this.loop = false;
+    this.loopSong = false;
     this.audioPlayer?.stop();
     this.queue = [];
     this.nowPlayingListener?.onDelete();

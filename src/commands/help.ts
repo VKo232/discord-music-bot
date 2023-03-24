@@ -88,6 +88,10 @@ const commands = [
     name: Config.prefix + "move",
     description: "Moves the requested song to the front of the queue"
   },
+  {
+    name: Config.prefix + "loop",
+    description: "Loops the queue or the specified song"
+  },
 ];
 const helpEmbed = {
   color: 0x0099ff,

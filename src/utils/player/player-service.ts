@@ -49,6 +49,12 @@ export const playerRemove = (guildID: string, index: number) => {
 export const playerMove = (guildID: string, index:number) => {
   allPlayers.get(guildID)?.move(index);
 }
+export const playerLoopQueue = (guildID: string) => {
+  allPlayers.get(guildID)?.loopQueue();
+}
+export const playerLoopSong = (guildID: string) => {
+  allPlayers.get(guildID)?.loopCurrSong();
+}
 export const playerDestroy = (guildID: string) => {
   const thisPlayer = allPlayers.get(guildID);
   if (thisPlayer) {
