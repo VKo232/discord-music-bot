@@ -9,13 +9,17 @@ const youPattern =
   /^https?:\/\/(www\.)?youtube\.com\/(watch\?v=[a-zA-Z0-9_-]+|playlist\?list=[a-zA-Z0-9_-]+)(\&.*)?$/;
 
 const youtube = new YoutubeQuotaManager();
+
+/*
+Given querystring, search for a youtube link 
+*/
 export const searchYTlink = async (query: string): Promise<ITrack[]> => {
   const videos: ITrack[] = [];
   try {
     if (query === "") {
       return [];
     }
-
+    query += ' lyrics audio'
     const url = new URL(`https://www.youtube.com/results`);
     url.searchParams.set('search_query', query);
     const html = await axios.get(url.href);
@@ -49,6 +53,9 @@ export const searchYTlink = async (query: string): Promise<ITrack[]> => {
   }
 };
 
+/*
+Searches for a video using official youtube api
+*/
 export const fallbackSearchYTLink = async (query: string): Promise<ITrack[]>  => {
   console.log("fallback")
   const videos: ITrack[] = [];
@@ -82,7 +89,9 @@ export const fallbackSearchYTLink = async (query: string): Promise<ITrack[]>  =>
     return [];
   }
 }
-
+/*
+Given a track, searches for the first result link from youtube
+*/
 export const getYTlink = async (track: ITrack): Promise<string> => {
   try {
     console.log("getting yt link praying", track.name);
@@ -90,7 +99,7 @@ export const getYTlink = async (track: ITrack): Promise<string> => {
     if (youPattern.test(track.source)) {
       return track.source;
     }
-    const query = track.name + " " + track.artists.join(" ");
+    const query = `"${track.name}"  "${track.artists.join('" "')}"`;
     const qdata = await searchYTlink(query);
     if (qdata?.length) {
       return qdata[0].source;
@@ -112,7 +121,9 @@ function isVideoLink(link: string): boolean {
 function isVideoInPlaylist(link: string): boolean {
   return link.includes("watch?v=") && link.includes("list=");
 }
-
+/*
+Get playlist id given a link
+*/
 function getPlaylistId(link: string): string | null {
   if (isPlaylistLink(link)) {
     const match = link.match(/playlist\?list=(.*)/);
@@ -127,6 +138,9 @@ function getPlaylistId(link: string): string | null {
   }
   return null;
 }
+/*
+Get video id from youtube link
+*/
 const getVideoId = (link: string): string | null => {
   if (isVideoLink(link)) {
     const match = link.match(/watch\?v=(.*?)(&|$)/);
@@ -142,6 +156,9 @@ const getVideoId = (link: string): string | null => {
   return null;
 };
 
+/*
+Get tracks from playlist id
+*/
 const getVideosFromPlaylist = async (playlistId: string): Promise<ITrack[]> => {
   let tracks: ITrack[] = [];
   let count = 0;
@@ -177,9 +194,11 @@ const getVideosFromPlaylist = async (playlistId: string): Promise<ITrack[]> => {
   return tracks;
 };
 
+/*
+Get tracks from a comma separated list of videoIds. 
+*/
 const getVideosFromVideo = async (videoId: string): Promise<ITrack[]> => {
   const tracks: ITrack[] = [];
-
   const videosParams: youtube_v3.Params$Resource$Videos$List = {
     part: ["snippet"],
     id: [videoId],
@@ -201,6 +220,9 @@ const getVideosFromVideo = async (videoId: string): Promise<ITrack[]> => {
   return tracks;
 };
 
+/*
+Given a youtube link, return the list of videos that are associated with that link (video/playlist)
+*/
 export const getYTTracks = async (link: string): Promise<ITrack[]> => {
   try {
     let tracks: ITrack[] = [];

@@ -10,8 +10,12 @@ container_name=music_bot
 sudo docker pull $image_name
 
 # Stop all instances of the old image
-sudo docker stop $container_name
-sudo docker rm $container_name
+sudo docker stop "${container_name}1"
+sudo docker stop "${container_name}2"
+
+sudo docker rm "${container_name}1"
+sudo docker rm "${container_name}2"
 
 # Run the latest version of the image
-sudo docker run --env-file music.env --name $container_name $image_name
+sudo docker run --env-file music1.env --name "${container_name}1" $image_name
+sudo docker run --env-file music2.env --name "${container_name}2" $image_name
