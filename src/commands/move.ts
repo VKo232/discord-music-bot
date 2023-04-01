@@ -9,7 +9,7 @@ module.exports = {
   aliases: ["m"],
   async execute(client: Client, message: Message, args: any) {
     console.log(
-      `>>>Remove user: ${message.author.username} in guild: ${message.guild?.name}`
+      `>>>Move user: ${message.author.username} in guild: ${message.guild?.name}`
     );
     if (!message.guild?.id) {
       return;
