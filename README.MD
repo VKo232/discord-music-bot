@@ -34,5 +34,9 @@
     - `git checkout main` to go back to the main branch
 5. Then go on github and make a pull request
 
+## Deploy pipelines
+
+The project is deployed for production through an image on docker hub that is built for arm64v8 platforms using github actions 
+
 ## connecting to a server
-opc@192.18.148.250
+<!-- opc@192.18.148.250  --> 
